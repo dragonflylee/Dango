@@ -1,0 +1,37 @@
+TARGETNAME=Dango
+TARGETPATH=../bin
+TARGETTYPE=PROGRAM
+
+UMTYPE=windows
+#UMBASE=0x01000000
+UMENTRY=wwinmain
+USE_NATIVE_EH=1
+USE_LIBCMT=1
+USE_MSVCRT=1
+
+SXS_MANIFEST=Dango.manifest
+SXS_MANIFEST_IN_RESOURCES=1
+SXS_ASSEMBLY_NAME=Dango
+SXS_ASSEMBLY_LANGUAGE=0000
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+#C_DEFINES=$(C_DEFINES) -DMBCS -D_MBCS
+
+SOURCES=StdAfx.cpp \
+        Dango.cpp \
+        MainFrm.cpp \
+        Dango.rc
+        
+INCLUDES= $(SDK_INC_PATH); $(MSSDK)\Include;
+
+TARGETLIBS= $(MSSDK)\Lib\d2d1.lib \
+            $(SDK_LIB_PATH)\windowscodecs.lib \
+            $(SDK_LIB_PATH)\gdi32.lib \
+            $(SDK_LIB_PATH)\gdiplus.lib \
+            $(SDK_LIB_PATH)\Shlwapi.lib \
+            $(SDK_LIB_PATH)\Ole32.lib \
+            $(SDK_LIB_PATH)\OleAut32.lib \
+            $(SDK_LIB_PATH)\Shell32.lib \
+            $(SDK_LIB_PATH)\kernel32.lib \
+            $(SDK_LIB_PATH)\Comdlg32.lib \
+            $(SDK_LIB_PATH)\advapi32.lib

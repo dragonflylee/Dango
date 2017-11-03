@@ -1,0 +1,249 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "Resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "Version.h"
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(中华人民共和国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION VER_FULL_RC
+PRODUCTVERSION VER_FULL_RC
+FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x4L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "FileDescription", "团子小助手"
+            VALUE "LegalCopyright", "蜻蜓特派员 (C) Copyright 2017"
+            VALUE "OriginalFilename", "Dango.exe"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 182, 70
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDR_MAIN, IDC_STATIC, 140, 20, 60, 60
+    DEFPUSHBUTTON   "确定", IDOK, 125, 47, 50, 15
+    LTEXT           "团子小助手 v", IDC_STATIC, 30, 20, 60, 15
+    LTEXT           VER_FULL, IDC_STATIC, 77, 20, 25, 15
+    LTEXT           "蜻蜓特派员 (c) Copyright 2017", IDC_STATIC, 13, 35, 105, 20
+    GROUPBOX        "", IDC_STATIC, 7, 7, 113, 55
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAIN                "团子小助手"
+    IDS_EXIT                "确认要退出吗？"
+    IDS_OPENFILTER          "图像文件|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|所有文件 (*.*)|*.*|"
+    IDS_SINGLE              "貌似另一个我正在运行"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAIN MENU
+BEGIN
+POPUP "Popup"
+BEGIN
+    MENUITEM "总在最前(&T)", IDM_TOPMOST
+    MENUITEM "更换图像(&C)", IDM_OPENIMG
+    MENUITEM "关于(&A)", IDM_ABOUT
+    MENUITEM "退出(&X)", IDM_EXIT
+END
+END
+
+#endif    // 中文(中华人民共和国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英语(美国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VER_FULL_RC
+ PRODUCTVERSION VER_FULL_RC
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "Dango"
+            VALUE "LegalCopyright", "dragonflyee (C) Copyright 2017"
+            VALUE "OriginalFilename", "Dango.exe"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 182, 70
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDR_MAIN, IDC_STATIC, 140, 20, 60, 60
+    DEFPUSHBUTTON   "OK", IDOK, 125, 47, 50, 15
+    LTEXT           "Dango v", IDC_STATIC, 38, 20, 45, 15
+    LTEXT           VER_FULL, IDC_STATIC, 65, 20, 25, 15
+    LTEXT           "dragonflylee (c) Copyright 2017", IDC_STATIC, 13, 35, 105, 20
+    GROUPBOX        "", IDC_STATIC, 7, 7, 113, 55
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDR_MAIN                "Dango"
+    IDS_EXIT                "Confirm quit"
+    IDS_OPENFILTER          "Image Files|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|All files|*.*|"
+    IDS_SINGLE              "It looks like another me is running"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAIN MENU
+BEGIN
+POPUP "Popup"
+BEGIN
+    MENUITEM "&Topmost", IDM_TOPMOST
+    MENUITEM "&Change Image", IDM_OPENIMG
+    MENUITEM "&About", IDM_ABOUT
+    MENUITEM "E&xit", IDM_EXIT
+END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+IDR_MAIN                ICON                    "Dango.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RCDATA
+//
+
+IDR_MAIN                RCDATA                  "Dance.gif"
+
+
+#endif    // 英语(美国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "Resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""Version.h""\r\n"
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
