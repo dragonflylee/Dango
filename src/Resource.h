@@ -4,9 +4,10 @@
 //
 #define IDR_MAIN                   101
 #define IDD_ABOUT                  102
-#define IDS_EXIT                  401
-#define IDS_OPENFILTER             402
-#define IDS_SINGLE                 403
+#define IDS_EXIT                   401
+#define IDS_FILTER                 402
+#define IDS_RUNNING                403
+#define IDS_ERROR                  404
 #define IDM_EXIT                   4001
 #define IDM_ABOUT                  4002
 #define IDM_TOPMOST                4003

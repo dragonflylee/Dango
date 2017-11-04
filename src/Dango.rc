@@ -82,8 +82,9 @@ STRINGTABLE
 BEGIN
     IDR_MAIN                "团子小助手"
     IDS_EXIT                "确认要退出吗？"
-    IDS_OPENFILTER          "图像文件|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|所有文件 (*.*)|*.*|"
-    IDS_SINGLE              "貌似另一个我正在运行"
+    IDS_FILTER              "图像文件|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
+    IDS_RUNNING             "貌似另一个我正在运行"
+    IDS_ERROR               "发生了一个致命错误 (%d)"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -175,8 +176,9 @@ STRINGTABLE
 BEGIN
     IDR_MAIN                "Dango"
     IDS_EXIT                "Confirm quit"
-    IDS_OPENFILTER          "Image Files|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|All files|*.*|"
-    IDS_SINGLE              "It looks like another me is running"
+    IDS_FILTER              "Image Files|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
+    IDS_RUNNING             "It seems that another me is running"
+    IDS_ERROR               "Oops, critical error happened (%d)"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -206,7 +208,7 @@ IDR_MAIN                ICON                    "Dango.ico"
 // RCDATA
 //
 
-IDR_MAIN                RCDATA                  "Dance.gif"
+IDR_MAIN                RCDATA                  "res\\launch.png"
 
 
 #endif    // 英语(美国) resources

@@ -82,7 +82,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Image Include="Dance.gif" />
     <Image Include="Dango.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -94,11 +93,14 @@
     <ResourceCompile Include="Dango.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Frame.h" />
     <ClInclude Include="Layered.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Version.h" />
+    <ClInclude Include="WICImage.h" />
+    <ClInclude Include="WidgetFrm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "MainFrm.h"
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -8,24 +9,30 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    CMainFrm wndMain;
+
     ::CreateMutex(NULL, TRUE, TEXT("CDangoHelper"));
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        TCHAR szText[MAX_PATH], szTitle[MAX_PATH];
-        ::LoadString(hInstance, IDS_SINGLE, szText, _countof(szText));
-        ::LoadString(hInstance, IDR_MAIN, szTitle, _countof(szTitle));
-        return ::MessageBox(HWND_DESKTOP, szText, szTitle, MB_ICONWARNING | MB_TOPMOST);
+        TCHAR szText[MAX_PATH];
+        ::LoadString(hInstance, IDS_RUNNING, szText, _countof(szText));
+        return wndMain.MessageBox(szText, MB_ICONWARNING | MB_TOPMOST);
     }
 
     ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     ::DefWindowProc(NULL, 0, 0, 0L);
 
-    CMainFrm wndMain;
     HWND hWnd = wndMain.Create(hInstance, HWND_DESKTOP);
-    if (NULL == hWnd) return S_FALSE;
+    if (NULL == hWnd)
+    {
+        DWORD dwError = ::GetLastError();
+        TCHAR szFormat[MAX_PATH], szText[MAX_PATH];
+        ::LoadString(hInstance, IDS_ERROR, szFormat, _countof(szFormat));
+        _stprintf_s(szText, _countof(szText), szFormat, dwError);
+        return wndMain.MessageBox(szText, MB_ICONERROR | MB_TOPMOST);
+    }
 
     ::ShowWindow(hWnd, nCmdShow);
-    ::UpdateWindow(hWnd);
 
     HACCEL hAccMain = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAIN));
 

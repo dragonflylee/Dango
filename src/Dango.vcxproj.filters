@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Dance.gif">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="Dango.ico">
       <Filter>资源文件</Filter>
     </Image>
@@ -52,6 +49,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Layered.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WICImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WidgetFrm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Frame.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
