@@ -9,12 +9,12 @@ class CWidgetFrm;
 class CMainFrm : public CFrameWnd<CMainFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW>, CLayeredInfo
 {
 public:
+    DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW + 1);
     /**
     * 消息处理
     */
     LRESULT OnCreate();
     LRESULT OnDestroy();
-    LRESULT OnContext();
 
     /**
     * 右键菜单事件
@@ -41,8 +41,7 @@ private:
     static UINT WM_TASKBARCREATED;
 
 public:
-    CMainFrm();
-    virtual ~CMainFrm();
+    CMainFrm() : m_hMenu(NULL), m_pWidget(NULL) {}
 };
 
 #endif // _MAIN_FRM_H_

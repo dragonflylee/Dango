@@ -88,6 +88,7 @@
     <ClCompile Include="Dango.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="WidgetFrm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Dango.rc" />

@@ -20,6 +20,8 @@ public:
 
     CFrameWnd() : m_hWnd(NULL), m_hInst(NULL) {}
 
+    virtual ~CFrameWnd() {}
+
     /**
     * 创建窗体
     */
@@ -51,12 +53,28 @@ public:
             CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hParent, NULL, hInst, static_cast<T*>(this));
     }
 
+    /**
+    * 消息框
+    */
     int MessageBox(LPCTSTR lpText, UINT uType)
     {
         return ::MessageBox(m_hWnd, lpText, m_szTitle, uType);
     }
 
 protected:
+    /**
+    * 窗体创建事件
+    */
+    LRESULT OnCreate() { return S_OK; }
+
+    /**
+    * 窗体消息循环
+    */
+    LRESULT DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+
     /**
     * 窗体消息循环
     */

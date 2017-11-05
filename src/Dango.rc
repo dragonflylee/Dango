@@ -84,7 +84,7 @@ BEGIN
     IDS_EXIT                "确认要退出吗？"
     IDS_FILTER              "图像文件|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
     IDS_RUNNING             "貌似另一个我正在运行"
-    IDS_ERROR               "发生了一个致命错误 (%d)"
+    IDS_ERROR               "发生了一个致命错误 (0x%.8X)"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ BEGIN
 POPUP "Popup"
 BEGIN
     MENUITEM "总在最前(&T)", IDM_TOPMOST
-    MENUITEM "更换图像(&C)", IDM_OPENIMG
+    MENUITEM "打开图像(&O)", IDM_OPENIMG
     MENUITEM "关于(&A)", IDM_ABOUT
     MENUITEM "退出(&X)", IDM_EXIT
 END
@@ -178,7 +178,7 @@ BEGIN
     IDS_EXIT                "Confirm quit"
     IDS_FILTER              "Image Files|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
     IDS_RUNNING             "It seems that another me is running"
-    IDS_ERROR               "Oops, critical error happened (%d)"
+    IDS_ERROR               "Oops, critical error happened (0x%.8X)"
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -191,7 +191,7 @@ BEGIN
 POPUP "Popup"
 BEGIN
     MENUITEM "&Topmost", IDM_TOPMOST
-    MENUITEM "&Change Image", IDM_OPENIMG
+    MENUITEM "&Open Image", IDM_OPENIMG
     MENUITEM "&About", IDM_ABOUT
     MENUITEM "E&xit", IDM_EXIT
 END
@@ -201,7 +201,7 @@ END
 //
 // Icon
 //
-IDR_MAIN                ICON                    "Dango.ico"
+IDR_MAIN                ICON                    "res\\Dango.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

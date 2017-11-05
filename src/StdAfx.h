@@ -6,6 +6,7 @@
 #include <tchar.h>
 
 #include <Shlwapi.h>
+#include <Windowsx.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <Commdlg.h>

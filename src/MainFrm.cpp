@@ -7,17 +7,10 @@
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
 
-CMainFrm::CMainFrm() : m_hMenu(NULL), m_pWidget(NULL)
-{
-}
-
-CMainFrm::~CMainFrm()
-{
-}
-
 LRESULT CMainFrm::OnCreate()
 {
     HRESULT hr = S_OK;
+    POINT ptWnd = { 0, 0 };
     CWICImage img;
 
     // 初始化托盘图标
@@ -41,13 +34,20 @@ LRESULT CMainFrm::OnCreate()
 
     // 加载图片
     HR_CHECK(img.Load(m_hInst, MAKEINTRESOURCE(IDR_MAIN), RT_RCDATA));
-    HR_CHECK(m_layered.UpdateLayered(m_hWnd, img));
+    HR_CHECK(m_layered.UpdateLayered(m_hWnd, CRenderTarget(img)));
    
     // 读取坐标
-    UINT top = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Top"), 0, m_config);
-    UINT left = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Left"), 0, m_config);
-    BOOL_CHECK(::SetWindowPos(m_hWnd, HWND_TOPMOST, left, top, 0, 0, SWP_NOSIZE));
+    ptWnd.x = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Left"), 0, m_config);
+    ptWnd.y = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Top"), 0, m_config);
 
+    // 读取总在最前配置
+    HWND hAfter = HWND_TOP;
+    if (::GetPrivateProfileInt(TEXT("Main"), TEXT("TopMost"), 0, m_config))
+    {
+        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_CHECKED);
+        hAfter = HWND_TOPMOST;
+    }
+    BOOL_CHECK(::SetWindowPos(m_hWnd, hAfter, ptWnd.x, ptWnd.y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
 exit:
     // 返回 -1 表示窗口创建失败
     return SUCCEEDED(hr) ? 0 : -1;
@@ -56,11 +56,11 @@ exit:
 LRESULT CMainFrm::OnDestroy()
 {
     TCHAR szValue[10];
-    RECT rc;
-    ::GetWindowRect(m_hWnd, &rc);
-    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rc.top);
+    RECT rcWnd;
+    ::GetWindowRect(m_hWnd, &rcWnd);
+    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rcWnd.top);
     ::WritePrivateProfileString(TEXT("Main"), TEXT("Top"), szValue, m_config);
-    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rc.left);
+    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rcWnd.left);
     ::WritePrivateProfileString(TEXT("Main"), TEXT("Left"), szValue, m_config);
 
     // 删除托盘图标
@@ -73,27 +73,12 @@ LRESULT CMainFrm::OnDestroy()
     return S_OK;
 }
 
-LRESULT CMainFrm::OnContext()
-{
-    POINT pt;
-    ::GetCursorPos(&pt);
-    return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
-}
-
 LRESULT CMainFrm::OnTopMost()
 {
-    if (::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) & MF_CHECKED)
-    {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_UNCHECKED);
-        ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), TEXT("0"), m_config);
-        return ::SetWindowPos(m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    }
-    else
-    {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_CHECKED);
-        ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), TEXT("1"), m_config);
-        return ::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    }
+    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) ^ MF_CHECKED;
+    ::CheckMenuItem(m_hMenu, IDM_TOPMOST, nCheck);
+    ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), nCheck ? TEXT("1") : TEXT("0"), m_config);
+    return ::SetWindowPos(m_hWnd, nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
 LRESULT CMainFrm::OnChangeImage()
@@ -114,14 +99,7 @@ LRESULT CMainFrm::OnChangeImage()
 
     m_pWidget = new CWidgetFrm(szImage);
     HWND hWnd = m_pWidget->Create(m_hInst, m_hWnd);
-    if (NULL == hWnd)
-    {
-        DWORD dwError = ::GetLastError();
-        TCHAR szFormat[MAX_PATH], szText[MAX_PATH];
-        ::LoadString(m_hInst, IDS_ERROR, szFormat, _countof(szFormat));
-        _stprintf_s(szText, _countof(szText), szFormat, dwError);
-        return MessageBox(szText, MB_ICONERROR | MB_TOPMOST);
-    }
+    if (NULL == hWnd) return FALSE;
     return ::ShowWindow(hWnd, SW_SHOW);
 }
 
@@ -163,7 +141,11 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
         case WM_CONTEXTMENU:
         case WM_RBUTTONUP:
-            return OnContext();
+        {
+            POINT pt;
+            ::GetCursorPos(&pt);
+            return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
+        }
         case WM_LBUTTONUP:
             ::ShowWindow(hWnd, SW_SHOW);
             return ::OpenIcon(hWnd);
@@ -180,9 +162,15 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         // 鼠标点击拖动窗口
         ::PostMessage(hWnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
         break;
-    case WM_RBUTTONUP:
+    case WM_DISPLAYCHANGE:
+    {
+        RECT rcWnd;
+        ::GetWindowRect(m_hWnd, &rcWnd);
+        return m_layered.SetPosition(m_hWnd, (LPPOINT)&rcWnd);
+    }
+    case WM_CONTEXTMENU:
         // 右键菜单
-        return OnContext();
+        return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);;
     case WM_DESTROY:
         return OnDestroy();
     }

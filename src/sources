@@ -20,6 +20,7 @@ C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
 SOURCES=StdAfx.cpp \
         Dango.cpp \
         MainFrm.cpp \
+        WidgetFrm.cpp \
         Dango.rc
         
 INCLUDES= $(SDK_INC_PATH); $(MSSDK)\Include;

@@ -8,25 +8,6 @@
 class CWICImage
 {
 public:
-    CWICImage() : m_uFrames(0), m_pDecoder(NULL), m_uNextFrame(0), m_uFrameDelay(0), m_pBitmap(NULL)
-    {
-        if (NULL == m_pIWICFactory) // 创建 WIC 工厂实例
-        {
-            ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
-        }
-        else
-        {
-            m_pIWICFactory->AddRef();
-        }
-    }
-
-    ~CWICImage()
-    {
-        SAFE_RELEASE(m_pBitmap);
-        SAFE_RELEASE(m_pDecoder);
-        if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
-    }
-
     /**
     * 从资源中加载图像
     */
@@ -47,10 +28,7 @@ public:
         pStream = ::SHCreateMemStream(pData, cbSize);
         BOOL_CHECK(pStream);
 
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        SAFE_RELEASE(m_pDecoder);
+        Clear();
 
         hr = m_pIWICFactory->CreateDecoderFromStream(pStream, NULL, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
         HR_CHECK(hr);
@@ -72,10 +50,7 @@ public:
     */
     HRESULT Load(LPCWSTR wzFilename)
     {
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        SAFE_RELEASE(m_pDecoder);
+        Clear();
 
         HRESULT hr = m_pIWICFactory->CreateDecoderFromFilename(wzFilename, NULL,
             GENERIC_READ, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
@@ -89,6 +64,18 @@ public:
         hr = NextFrame();
     exit:
         return hr;
+    }
+
+    /**
+    * 清除已加载的图像
+    */
+    void Clear()
+    {
+        m_uFrames = 0;
+        m_uNextFrame = 0;
+        m_uFrameDelay = 0;
+        SAFE_RELEASE(m_pBitmap);
+        SAFE_RELEASE(m_pDecoder);
     }
 
     /**
@@ -164,6 +151,23 @@ private:
     UINT m_uNextFrame;
     UINT m_uFrameDelay;
     IWICBitmap *m_pBitmap;
+
+private:
+    CWICImage&operator=(const CWICImage&);
+    CWICImage(const CWICImage&);
+
+public:
+    CWICImage() : m_uFrames(0), m_pDecoder(NULL), m_uNextFrame(0), m_uFrameDelay(0), m_pBitmap(NULL)
+    {
+        if (NULL == m_pIWICFactory) ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
+        m_pIWICFactory->AddRef();
+    }
+
+    ~CWICImage()
+    {
+        Clear();
+        if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
+    }
 };
 
 __declspec(selectany) IWICImagingFactory * CWICImage::m_pIWICFactory = NULL;
