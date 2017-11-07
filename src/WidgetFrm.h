@@ -1,18 +1,19 @@
 #ifndef _WIDGET_FRM_H_
 #define _WIDGET_FRM_H_
 
-#include "Layered.h"
-#include "WICImage.h"
+#include "BtnWnd.h"
 
 class CWidgetFrm : public CWindowImpl<CWidgetFrm, CWindow, CLayeredTraits>
 {
 public:
-    DECLARE_WND_CLASS_EX(TEXT("CDangoWidget"), 0, COLOR_WINDOW + 1);
+    DECLARE_WND_CLASS_EX(TEXT("CDangoWidget"), CS_DBLCLKS, COLOR_WINDOW + 1);
 
     BEGIN_MSG_MAP(CWidgetFrm)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
         MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -26,7 +27,9 @@ public:
     */
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnShowWindow(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -45,9 +48,20 @@ private:
     UINT_PTR m_uTimer;
     CLayeredInfo m_layered;
     CWICImage m_image;
+    CBtnClose m_close;
+
+private:
+    CWidgetFrm&operator=(const CWidgetFrm&);
+    CWidgetFrm(const CWidgetFrm&);
 
 public:
-    CWidgetFrm(LPCWSTR szPath = NULL) : m_szPath(szPath), m_bTracking(FALSE), m_uTimer(1) {}
+    CWidgetFrm(LPCWSTR szPath = NULL) : m_szPath(szPath), m_bTracking(FALSE), m_uTimer(1), m_layered(0xCC) {}
+};
+
+template<> class CElementTraits<CWidgetFrm> : public CElementTraitsBase<CWidgetFrm>
+{
+public:
+    typedef LPCWSTR INARGTYPE;
 };
 
 #endif // _WIDGET_FRM_H_

@@ -6,24 +6,26 @@
 
 #define WM_ICON WM_USER + 180
 
-class CMainFrm : public CWindowImpl<CMainFrm, CWindow, CLayeredTraits>, public CButtonWnd<CMainFrm>
+class CMainFrm : public CWindowImpl<CMainFrm, CWindow, CLayeredTraits>, 
+    public CButtonBase<CMainFrm>
 {
 public:
-    DECLARE_WND_CLASS_EX(TEXT("CMainFrm"), 0, COLOR_WINDOW + 1)
+    DECLARE_WND_CLASS_EX(TEXT("CMainFrm"), CS_DBLCLKS, COLOR_WINDOW + 1)
 
     BEGIN_MSG_MAP(CMainFrm)
-        CHAIN_MSG_MAP(CButtonWnd<CMainFrm>)
+        CHAIN_MSG_MAP(CButtonBase<CMainFrm>)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_RBUTTONUP, OnContext)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContext)
+        MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
         MESSAGE_HANDLER(WM_ICON, OnIcon)
         MESSAGE_HANDLER(CMainFrm::WM_TASKBARCREATED, OnTaskbarCreated)
         COMMAND_ID_HANDLER(IDM_EXIT, OnExit)
         COMMAND_ID_HANDLER(IDM_ABOUT, OnAbout)
-        COMMAND_ID_HANDLER(IDM_OPENIMG, OnOpenImage)
-        COMMAND_ID_HANDLER(IDM_TOPMOST, OnTopMost)
+        COMMAND_ID_HANDLER(IDM_OPENIMG, OnOpen)
+        COMMAND_ID_HANDLER(IDM_TOPMOST, OnTop)
     END_MSG_MAP()
 
 public:
@@ -36,6 +38,7 @@ public:
     LRESULT OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnDropFiles(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnTaskbarCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     /**
@@ -43,8 +46,8 @@ public:
     */
     LRESULT OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-    LRESULT OnOpenImage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-    LRESULT OnTopMost(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
     HMENU m_hMenu;
@@ -53,10 +56,10 @@ private:
     // 任务栏重启消息
     static UINT WM_TASKBARCREATED;
 
-    CAtlArray<CWidgetFrm> m_pWidget;
+    CAtlList<CWidgetFrm> m_pWidget;
 
 public:
-    CMainFrm() : m_hMenu(NULL) {}
+    CMainFrm() : CButtonBase(IDR_MAIN), m_hMenu(NULL) {}
 };
 
 #endif // _MAIN_FRM_H_

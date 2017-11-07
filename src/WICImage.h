@@ -8,49 +8,22 @@
 class CWICImage
 {
 public:
-    CWICImage() : m_uFrames(0), m_uNextFrame(0), m_uFrameDelay(0)
-    {
-        if (NULL == m_pIWICFactory) // 创建 WIC 工厂实例
-        {
-            ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
-        }
-        
-        m_pIWICFactory->AddRef();
-    }
-
-    ~CWICImage()
-    {
-        if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
-    }
-
-    /**
-    * 清除已加载的图像
-    */
-    void Clear()
-    {
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        m_pDecoder = NULL;
-        m_pBitmap = NULL;
-    }
-
     /**
     * 从资源中加载图像
     */
-    HRESULT Load(HMODULE hModule, LPCTSTR szName, LPCTSTR szType)
+    HRESULT Load(_U_STRINGorID nID, LPCTSTR szType)
     {
-        CComPtr<IStream> pStream = NULL;
+        CComPtr<IStream> pStream;
         HGLOBAL hRes = NULL;
         HRESULT hr = S_OK;
 
-        HRSRC hSrc = ::FindResource(hModule, szName, szType);
+        HRSRC hSrc = ::FindResource(_Module.GetModuleInstance(), nID.m_lpstr, szType);
         BOOL_CHECK(hSrc);
 
-        hRes = ::LoadResource(hModule, hSrc);
+        hRes = ::LoadResource(_Module.GetModuleInstance(), hSrc);
         BOOL_CHECK(hSrc);
 
-        DWORD cbSize = SizeofResource(hModule, hSrc);
+        DWORD cbSize = SizeofResource(_Module.GetModuleInstance(), hSrc);
         LPBYTE pData = (LPBYTE)::LockResource(hRes);
         pStream = ::SHCreateMemStream(pData, cbSize);
         BOOL_CHECK(pStream);
@@ -90,6 +63,18 @@ public:
         hr = NextFrame();
     exit:
         return hr;
+    }
+
+    /**
+    * 清除已加载的图像
+    */
+    void Clear()
+    {
+        m_uFrames = 0;
+        m_uNextFrame = 0;
+        m_uFrameDelay = 0;
+        m_pDecoder = NULL;
+        m_pBitmap = NULL;
     }
 
     /**
@@ -158,10 +143,32 @@ private:
     CComPtr<IWICBitmapDecoder> m_pDecoder;
     static IWICImagingFactory *m_pIWICFactory;
     // 当前帧状态
-    SIZE m_size;
     UINT m_uNextFrame;
     UINT m_uFrameDelay;
     CComPtr<IWICBitmap> m_pBitmap;
+
+private:
+    CWICImage&operator=(const CWICImage&);
+    CWICImage(const CWICImage&);
+
+public:
+    CWICImage() : m_uFrames(0), m_uNextFrame(0), m_uFrameDelay(0)
+    {
+        if (NULL == m_pIWICFactory) ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
+        ATLASSERT(m_pIWICFactory);
+        m_pIWICFactory->AddRef();
+    }
+
+    ~CWICImage()
+    {
+        if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
+    }
+};
+
+template<> class CElementTraits<CWICImage> : public CElementTraitsBase<CWICImage>
+{
+public:
+    typedef IWICBitmap * OUTARGTYPE;
 };
 
 __declspec(selectany) IWICImagingFactory * CWICImage::m_pIWICFactory = NULL;

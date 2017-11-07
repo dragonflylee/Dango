@@ -19,6 +19,9 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     BOOL_CHECK(hIcon);
     SetIcon(hIcon);
 
+    // 允许拖放文件
+    ::DragAcceptFiles(m_hWnd, TRUE);
+
     // 初始化托盘图标
     ZeroMemory(&m_ncd, sizeof(m_ncd));
     m_ncd.cbSize = sizeof(m_ncd);
@@ -36,13 +39,13 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
     // 从获配置文件保存路径
     BOOL_CHECK(::SHGetSpecialFolderPath(m_hWnd, m_config, CSIDL_APPDATA, TRUE));
-    BOOL_CHECK(::PathCombine(m_config, m_config, TEXT("Dango.ini")))
+    BOOL_CHECK(::PathCombine(m_config, m_config, TEXT("Dango.ini")));
 
     // 读取坐标
     RECT rcWnd;
     rcWnd.left = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Left"), 0, m_config);
     rcWnd.top = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Top"), 0, m_config);
-    
+
     // 读取总在最前配置
     HWND hAfter = HWND_TOP;
     if (::GetPrivateProfileInt(TEXT("Main"), TEXT("TopMost"), 0, m_config))
@@ -74,7 +77,7 @@ LRESULT CMainFrm::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
     // 释放菜单资源
     if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
     ::PostQuitMessage(0);
-    return TRUE;
+    return S_OK;
 }
 
 LRESULT CMainFrm::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -94,9 +97,23 @@ LRESULT CMainFrm::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 LRESULT CMainFrm::OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
 {
-    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    ClientToScreen(&pt);
-    return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
+    return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);
+}
+
+LRESULT CMainFrm::OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+    HDROP hDrop = reinterpret_cast<HDROP>(wParam);
+    UINT uCount = ::DragQueryFile(hDrop, (UINT)-1, NULL, 0);
+    TCHAR szPath[MAX_PATH];
+
+    for (UINT iFile = 0; iFile < uCount; iFile++)
+    {
+        if (::DragQueryFile(hDrop, iFile, szPath, _countof(szPath)))
+        {
+            ATLTRACE(TEXT("%s\n"), szPath);
+        }
+    }
+    return S_OK;
 }
 
 LRESULT CMainFrm::OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
@@ -135,7 +152,7 @@ LRESULT CMainFrm::OnAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, 
     return dlgAbout.DoModal(m_hWnd);
 }
 
-LRESULT CMainFrm::OnOpenImage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainFrm::OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
     CAtlString szFilter;
     szFilter.LoadString(IDS_FILTER);
@@ -151,24 +168,16 @@ LRESULT CMainFrm::OnOpenImage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 
     if (!::GetOpenFileName(&ofn)) return FALSE;
 
-    int nSize = m_pWidget.Add(szImage);
-    HWND hWnd = m_pWidget[nSize].Create(m_hWnd);
+    POSITION nSize = m_pWidget.AddTail(szImage);
+    HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
     if (NULL == hWnd) return FALSE;
     return ::ShowWindow(hWnd, SW_SHOW);
 }
 
-LRESULT CMainFrm::OnTopMost(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainFrm::OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-    if (::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) & MF_CHECKED)
-    {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_UNCHECKED);
-        ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), TEXT("0"), m_config);
-        return ::SetWindowPos(m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    }
-    else
-    {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_CHECKED);
-        ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), TEXT("1"), m_config);
-        return ::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    }
+    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) ^ MF_CHECKED;
+    ::CheckMenuItem(m_hMenu, IDM_TOPMOST, nCheck);
+    ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), nCheck ? TEXT("1") : TEXT("0"), m_config);
+    return SetWindowPos(nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }

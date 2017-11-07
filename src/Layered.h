@@ -1,43 +1,46 @@
 #ifndef _LAYERED_WND_H_
 #define _LAYERED_WND_H_
 
-typedef CWinTraits<WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW> CLayeredTraits;
-
 /**
-* ID2D1RenderTarget 封装类
+* RenderTarget封装类
 */
-class CRenderTargetDC
+class CRenderTarget
 {
-public:
-    CRenderTargetDC(ID2D1RenderTarget* pTarget) :
-        m_pTarget(pTarget), m_pRenderTarget(NULL), m_hDC(NULL)
-    {
-        HRESULT hr = pTarget->QueryInterface(IID_PPV_ARGS(&m_pRenderTarget));
-        if (SUCCEEDED(hr) && NULL != m_pRenderTarget)
-        {
-            m_pTarget->BeginDraw();
-            m_pRenderTarget->GetDC(D2D1_DC_INITIALIZE_MODE_COPY, &m_hDC);
-        }
-    }
-    ~CRenderTargetDC()
-    {
-        if (NULL != m_pRenderTarget) m_pRenderTarget->ReleaseDC(NULL);
-        m_pTarget->EndDraw();
-    }
-    operator HDC() const { return m_hDC; }
 
-    /**
-    * 兼容GDI的Target属性
-    */
-    const static D2D1_RENDER_TARGET_PROPERTIES mD2DProperties;
+public:
+    CRenderTarget(IWICBitmap *pBitmap = NULL)
+    {
+        if (NULL == m_pD2DFactory) ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
+        m_pD2DFactory->AddRef();
+        if (NULL != pBitmap) m_pD2DFactory->CreateWicBitmapRenderTarget(pBitmap, &RenderProperties, &m_pTarget);
+    }
+
+    ~CRenderTarget()
+    {
+        if (0 == m_pD2DFactory->Release()) m_pD2DFactory = NULL;
+    }
+
+    operator ID2D1RenderTarget * () { return m_pTarget; }
 
 private:
     CComPtr<ID2D1RenderTarget> m_pTarget;
-    CComPtr<ID2D1GdiInteropRenderTarget> m_pRenderTarget;
-    HDC m_hDC;
+    static const D2D1_RENDER_TARGET_PROPERTIES RenderProperties;
+    static ID2D1Factory *m_pD2DFactory;
+
+private:
+    CRenderTarget(const CRenderTarget&);
+    CRenderTarget&operator=(const CRenderTarget&);
 };
 
-__declspec(selectany) const D2D1_RENDER_TARGET_PROPERTIES CRenderTargetDC::mD2DProperties =
+template<> class CElementTraits<CRenderTarget> : public CElementTraitsBase<CRenderTarget>
+{
+public:
+    typedef IWICBitmap * INARGTYPE;
+    typedef ID2D1RenderTarget * OUTARGTYPE;
+};
+
+__declspec(selectany) ID2D1Factory * CRenderTarget::m_pD2DFactory = NULL;
+__declspec(selectany) const D2D1_RENDER_TARGET_PROPERTIES CRenderTarget::RenderProperties =
     D2D1::RenderTargetProperties(
         D2D1_RENDER_TARGET_TYPE_DEFAULT,
         D2D1::PixelFormat(
@@ -49,76 +52,82 @@ __declspec(selectany) const D2D1_RENDER_TARGET_PROPERTIES CRenderTargetDC::mD2DP
         D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
     );
 
+typedef CWinTraits<WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW> CLayeredTraits;
+
 /**
 * 层叠窗口封装类
 */
 class CLayeredInfo
 {
 public:
-    CLayeredInfo()
-    {
-        ZeroMemory(&m_size, sizeof(m_size));
-        ZeroMemory(&m_blend, sizeof(m_blend));
-        m_blend.SourceConstantAlpha = 0xFF;
-        m_blend.AlphaFormat = AC_SRC_ALPHA;
-
-        if (NULL == m_pD2DFactory) // 创建 D2D 工厂实例
-        {
-            ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
-        }
-        m_pD2DFactory->AddRef();
-    }
-
-    ~CLayeredInfo()
-    {
-        if (m_pD2DFactory->Release() == 0) m_pD2DFactory = NULL;
-    }
-
     /**
     * 改变窗体透明度
     */
-    void SetAlpha(BYTE alpha) { m_blend.SourceConstantAlpha = alpha; }
-
+    BOOL SetAlpha(HWND hWnd, BYTE alpha)
+    {
+        m_blend.SourceConstantAlpha = alpha;
+        return ::UpdateLayeredWindow(hWnd, NULL, NULL, NULL, NULL, NULL, 0, &m_blend, 0);
+    }
+    
     /**
-     * 获取窗口尺寸
-     */
-    LONG GetWidth() const { return m_size.cx; }
-    LONG GetHeight() const { return m_size.cy; }
+    * 改变窗体位置
+    */
+    BOOL SetPosition(HWND hWnd, LPPOINT ptDst)
+    {
+        // 获取显示器信息
+        MONITORINFO minfo = { sizeof(MONITORINFO) };
+        HMONITOR hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        if (::GetMonitorInfo(hMonitor, &minfo))
+        {
+            // 处理窗体超出屏幕
+            if (ptDst->x + m_size.cx > minfo.rcWork.right) ptDst->x = minfo.rcWork.right - m_size.cx;
+            if (ptDst->x < minfo.rcWork.left) ptDst->x = minfo.rcWork.left;
+            if (ptDst->y + m_size.cy > minfo.rcWork.bottom) ptDst->y = minfo.rcWork.bottom - m_size.cy;
+            if (ptDst->y < minfo.rcWork.top) ptDst->y = minfo.rcWork.top;
+        }
+        return ::UpdateLayeredWindow(hWnd, NULL, ptDst, NULL, NULL, NULL, 0, NULL, 0);
+    }
 
     /**
     * 更新窗体
     */
-    HRESULT UpdateLayered(HWND hWnd, IWICBitmap *pBitmap)
+    HRESULT UpdateLayered(HWND hWnd, ID2D1RenderTarget *pTarget)
     {
-        CComPtr<ID2D1RenderTarget> pTarget;
         POINT pt = { 0, 0 };
-        UINT uWidth, uHight;
+        CComPtr<ID2D1GdiInteropRenderTarget> pGdiTarget;
+        D2D1_SIZE_U size = pTarget->GetPixelSize();
+        HDC hDC = NULL;
 
-        HRESULT hr = m_pD2DFactory->CreateWicBitmapRenderTarget(pBitmap, CRenderTargetDC::mD2DProperties, &pTarget);
+        // 设置绘图大小
+        m_size.cx = size.width;
+        m_size.cy = size.height;
+        pTarget->BeginDraw();
+
+        HRESULT hr = pTarget->QueryInterface(IID_PPV_ARGS(&pGdiTarget));
         HR_CHECK(hr);
-
-        hr = pBitmap->GetSize(&uWidth, &uHight);
+        // 获取DC
+        hr = pGdiTarget->GetDC(D2D1_DC_INITIALIZE_MODE_COPY, &hDC);
         HR_CHECK(hr);
-
-        if ((UINT)m_size.cx != uWidth || (UINT)m_size.cy != uHight)
-        {
-            // 窗口发生改变
-            m_size.cx = uWidth;
-            m_size.cy = uHight;
-            BOOL_CHECK(::SetWindowPos(hWnd, NULL, 0, 0, m_size.cx, m_size.cy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
-        }
         // 绘制窗体
-        BOOL_CHECK(::UpdateLayeredWindow(hWnd, NULL, NULL, &m_size, CRenderTargetDC(pTarget), &pt, 0, &m_blend, ULW_ALPHA));
+        BOOL_CHECK(::UpdateLayeredWindow(hWnd, NULL, NULL, &m_size, hDC, &pt, 0, &m_blend, ULW_ALPHA));
     exit:
+        if (NULL != pGdiTarget && NULL != hDC) pGdiTarget->ReleaseDC(NULL);
+        pTarget->EndDraw();
         return hr;
     }
 
 private:
     SIZE m_size;
     BLENDFUNCTION m_blend;
-    static ID2D1Factory *m_pD2DFactory;
-};
 
-__declspec(selectany) ID2D1Factory * CLayeredInfo::m_pD2DFactory = NULL;
+public:
+    CLayeredInfo(BYTE alpha = 0xFF)
+    {
+        ZeroMemory(&m_size, sizeof(m_size));
+        ZeroMemory(&m_blend, sizeof(m_blend));
+        m_blend.SourceConstantAlpha = alpha;
+        m_blend.AlphaFormat = AC_SRC_ALPHA;
+    }
+};
 
 #endif // _LAYERED_WND_H_

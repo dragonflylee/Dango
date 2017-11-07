@@ -94,13 +94,13 @@ END
 
 IDR_MAIN MENU
 BEGIN
-POPUP "Popup"
-BEGIN
-    MENUITEM "总在最前(&T)", IDM_TOPMOST
-    MENUITEM "打开图像(&O)", IDM_OPENIMG
-    MENUITEM "关于(&A)", IDM_ABOUT
-    MENUITEM "退出(&X)", IDM_EXIT
-END
+    POPUP "Popup"
+    BEGIN
+        MENUITEM "总在最前(&T)", IDM_TOPMOST
+        MENUITEM "打开图像(&O)", IDM_OPENIMG
+        MENUITEM "关于(&A)", IDM_ABOUT
+        MENUITEM "退出(&X)", IDM_EXIT
+    END
 END
 
 #endif    // 中文(中华人民共和国) resources
@@ -188,13 +188,13 @@ END
 
 IDR_MAIN MENU
 BEGIN
-POPUP "Popup"
-BEGIN
-    MENUITEM "&Topmost", IDM_TOPMOST
-    MENUITEM "&Open Image", IDM_OPENIMG
-    MENUITEM "&About", IDM_ABOUT
-    MENUITEM "E&xit", IDM_EXIT
-END
+    POPUP "Popup"
+    BEGIN
+        MENUITEM "&Topmost", IDM_TOPMOST
+        MENUITEM "&Open Image", IDM_OPENIMG
+        MENUITEM "&About", IDM_ABOUT
+        MENUITEM "E&xit", IDM_EXIT
+    END
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,6 @@ IDR_MAIN                ICON                    "res\\Dango.ico"
 IDR_MAIN                RCDATA                  "res\\launch_normal.png"
 IDR_HOVER               RCDATA                  "res\\launch_hover.png"
 IDR_PRESS               RCDATA                  "res\\launch_press.png"
-
 
 #endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////

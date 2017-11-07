@@ -4,11 +4,14 @@
 #include "Layered.h"
 #include "WICImage.h"
 
-template <class T, UINT nID = IDR_MAIN, int nState = 3>
-class CButtonWnd
+/*
+* 按钮选件类
+*/
+template <class T>
+class CButtonBase
 {
 public:
-    BEGIN_MSG_MAP(CButtonWnd)
+    BEGIN_MSG_MAP(CButtonBase)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -22,17 +25,9 @@ protected:
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
     {
-        HRESULT hr = S_OK;
-        // 加载图片
-        m_btn.SetCount(nState);
-        for (UINT i = 0; i < nState; i++)
-        {
-            HR_CHECK(m_btn[i].Load(_Module.GetModuleInstance(), MAKEINTRESOURCE(nID + i), RT_RCDATA));
-        }
-        HR_CHECK(m_layered.UpdateLayered(static_cast<T*>(this)->m_hWnd, m_btn[Normal]));
+        if (FAILED(OnRender(Normal))) return -1;
         bHandled = FALSE;
-    exit:
-        return SUCCEEDED(hr) ? 0 : -1;
+        return 0;
     }
     
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -60,28 +55,62 @@ protected:
     LRESULT OnMouseHover(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         m_bTracking = TRUE;
-        return m_layered.UpdateLayered(static_cast<T*>(this)->m_hWnd, m_btn[Hover]);
+        return OnRender(Hover);
     }
 
     LRESULT OnMouseLeave(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         m_bTracking = FALSE;
-        return m_layered.UpdateLayered(static_cast<T*>(this)->m_hWnd, m_btn[Normal]);
+        return OnRender(Normal);
     }
 
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
     {
         bHandled = FALSE;
-        return m_layered.UpdateLayered(static_cast<T*>(this)->m_hWnd, m_btn[Press]);
+        return OnRender(Press);
     }
 
-private:
+protected:
+    LRESULT OnRender(BtnState state)
+    {
+        T* pT = static_cast<T*>(this);
+        return m_layered.UpdateLayered(pT->m_hWnd, m_btn[state]);
+    }
+
+protected:
     BOOL m_bTracking;
     CLayeredInfo m_layered;
-    CAtlArray<CWICImage> m_btn;
+    CAtlArray<CRenderTarget> m_btn;
 
 public:
-    CButtonWnd() : m_bTracking(FALSE) {}
+    CButtonBase(UINT nID, BYTE alpha = 0xFF) : m_bTracking(FALSE), m_layered(alpha)
+    {
+        CWICImage img;
+        // 加载图片
+        for (UINT i = 0; i < 3; i++)
+        {
+            img.Load(nID + i, RT_RCDATA);
+            m_btn.Add(img);
+        }
+    }
 };
+
+class CBtnClose : public CWindowImpl<CBtnClose, CWindow, CLayeredTraits>, public CButtonBase<CBtnClose>
+{
+public:
+    BEGIN_MSG_MAP(CBtnClose)
+        CHAIN_MSG_MAP(CButtonBase<CBtnClose>)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+    END_MSG_MAP()
+
+    LRESULT OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        return GetParent().PostMessage(WM_CLOSE);
+    }
+
+public:
+    CBtnClose() : CButtonBase(IDR_MAIN, 0xCC) {}
+};
+
 
 #endif // _BUTTON_WND_H_
