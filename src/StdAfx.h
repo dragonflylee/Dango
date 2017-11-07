@@ -1,20 +1,24 @@
 #ifndef _STDAFX_H_
 #define _STDAFX_H_
 
-// Windows 头文件
-#include <windows.h>
-#include <tchar.h>
+// ATL 头文件:
+#include <atlbase.h>
+#include <atlstr.h>
 
-#include <Shlwapi.h>
+extern CComModule _Module;
+
+#include <atlwin.h>
+#include <atlcoll.h>
+
+// Windows 头文件:
+#include <shlobj.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <Commdlg.h>
 #include <wincodec.h>
 #include <d2d1.h>
 #pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "Shlwapi.lib")
 
-#define SAFE_RELEASE(p) if (NULL != (p)) { p->Release(); p = NULL; }
 #define HR_CHECK(_hr_) hr = _hr_; if (FAILED(hr)) { goto exit; }
 #define BOOL_CHECK(_hr_) if (!(_hr_)) { hr = HRESULT_FROM_WIN32(::GetLastError()); goto exit; }
 

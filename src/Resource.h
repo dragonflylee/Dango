@@ -3,7 +3,9 @@
 // π© Dango.rc  π”√
 //
 #define IDR_MAIN                   101
-#define IDD_ABOUT                  102
+#define IDR_HOVER                  102
+#define IDR_PRESS                  103
+#define IDD_ABOUT                  201
 #define IDS_EXIT                   401
 #define IDS_FILTER                 402
 #define IDS_RUNNING                403

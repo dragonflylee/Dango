@@ -8,23 +8,31 @@
 class CWICImage
 {
 public:
-    CWICImage() : m_uFrames(0), m_pDecoder(NULL), m_uNextFrame(0), m_uFrameDelay(0), m_pBitmap(NULL)
+    CWICImage() : m_uFrames(0), m_uNextFrame(0), m_uFrameDelay(0)
     {
         if (NULL == m_pIWICFactory) // 创建 WIC 工厂实例
         {
             ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
         }
-        else
-        {
-            m_pIWICFactory->AddRef();
-        }
+        
+        m_pIWICFactory->AddRef();
     }
 
     ~CWICImage()
     {
-        SAFE_RELEASE(m_pBitmap);
-        SAFE_RELEASE(m_pDecoder);
         if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
+    }
+
+    /**
+    * 清除已加载的图像
+    */
+    void Clear()
+    {
+        m_uFrames = 0;
+        m_uNextFrame = 0;
+        m_uFrameDelay = 0;
+        m_pDecoder = NULL;
+        m_pBitmap = NULL;
     }
 
     /**
@@ -32,7 +40,7 @@ public:
     */
     HRESULT Load(HMODULE hModule, LPCTSTR szName, LPCTSTR szType)
     {
-        IStream *pStream = NULL;
+        CComPtr<IStream> pStream = NULL;
         HGLOBAL hRes = NULL;
         HRESULT hr = S_OK;
 
@@ -47,10 +55,7 @@ public:
         pStream = ::SHCreateMemStream(pData, cbSize);
         BOOL_CHECK(pStream);
 
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        SAFE_RELEASE(m_pDecoder);
+        Clear();
 
         hr = m_pIWICFactory->CreateDecoderFromStream(pStream, NULL, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
         HR_CHECK(hr);
@@ -63,7 +68,6 @@ public:
         hr = NextFrame();
     exit:
         if (NULL != hRes) ::FreeResource(hRes);
-        SAFE_RELEASE(pStream);
         return hr;
     }
 
@@ -72,10 +76,7 @@ public:
     */
     HRESULT Load(LPCWSTR wzFilename)
     {
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        SAFE_RELEASE(m_pDecoder);
+        Clear();
 
         HRESULT hr = m_pIWICFactory->CreateDecoderFromFilename(wzFilename, NULL,
             GENERIC_READ, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
@@ -110,9 +111,8 @@ public:
     HRESULT NextFrame()
     {
         HRESULT hr = S_OK;
-        IWICBitmapFrameDecode *pWicFrame = NULL;
-        IWICFormatConverter *pConverter = NULL;
-        IWICMetadataQueryReader *pMetaQuery = NULL;
+        CComPtr<IWICBitmapFrameDecode> pWicFrame;
+        CComPtr<IWICFormatConverter> pConverter;
 
         hr = m_pDecoder->GetFrame(m_uNextFrame, &pWicFrame);
         HR_CHECK(hr);
@@ -123,12 +123,13 @@ public:
         hr = pConverter->Initialize(pWicFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom);
         HR_CHECK(hr);
 
-        SAFE_RELEASE(m_pBitmap);
+        m_pBitmap = NULL;
         hr = m_pIWICFactory->CreateBitmapFromSource(pConverter, WICBitmapCacheOnLoad, &m_pBitmap);
         HR_CHECK(hr);
 
         if (m_uFrames > 1)
         {
+            CComPtr<IWICMetadataQueryReader> pMetaQuery;
             hr = pWicFrame->GetMetadataQueryReader(&pMetaQuery);
             if (SUCCEEDED(hr) && NULL != pMetaQuery)
             {
@@ -149,21 +150,18 @@ public:
             }
         }
     exit:
-        SAFE_RELEASE(pWicFrame);
-        SAFE_RELEASE(pConverter);
-        SAFE_RELEASE(pMetaQuery);
         return hr;
     }
 
 private:
     UINT m_uFrames;
-    IWICBitmapDecoder *m_pDecoder;
+    CComPtr<IWICBitmapDecoder> m_pDecoder;
     static IWICImagingFactory *m_pIWICFactory;
     // 当前帧状态
     SIZE m_size;
     UINT m_uNextFrame;
     UINT m_uFrameDelay;
-    IWICBitmap *m_pBitmap;
+    CComPtr<IWICBitmap> m_pBitmap;
 };
 
 __declspec(selectany) IWICImagingFactory * CWICImage::m_pIWICFactory = NULL;

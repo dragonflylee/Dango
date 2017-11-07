@@ -1,6 +1,8 @@
 #ifndef _LAYERED_WND_H_
 #define _LAYERED_WND_H_
 
+typedef CWinTraits<WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW> CLayeredTraits;
+
 /**
 * ID2D1RenderTarget 封装类
 */
@@ -10,7 +12,6 @@ public:
     CRenderTargetDC(ID2D1RenderTarget* pTarget) :
         m_pTarget(pTarget), m_pRenderTarget(NULL), m_hDC(NULL)
     {
-        pTarget->AddRef();
         HRESULT hr = pTarget->QueryInterface(IID_PPV_ARGS(&m_pRenderTarget));
         if (SUCCEEDED(hr) && NULL != m_pRenderTarget)
         {
@@ -20,13 +21,8 @@ public:
     }
     ~CRenderTargetDC()
     {
-        if (NULL != m_pRenderTarget)
-        {
-            m_pRenderTarget->ReleaseDC(NULL);
-            m_pRenderTarget->Release();
-        }
+        if (NULL != m_pRenderTarget) m_pRenderTarget->ReleaseDC(NULL);
         m_pTarget->EndDraw();
-        m_pTarget->Release();
     }
     operator HDC() const { return m_hDC; }
 
@@ -36,8 +32,8 @@ public:
     const static D2D1_RENDER_TARGET_PROPERTIES mD2DProperties;
 
 private:
-    ID2D1RenderTarget* m_pTarget;
-    ID2D1GdiInteropRenderTarget* m_pRenderTarget;
+    CComPtr<ID2D1RenderTarget> m_pTarget;
+    CComPtr<ID2D1GdiInteropRenderTarget> m_pRenderTarget;
     HDC m_hDC;
 };
 
@@ -70,10 +66,7 @@ public:
         {
             ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
         }
-        else
-        {
-            m_pD2DFactory->AddRef();
-        }
+        m_pD2DFactory->AddRef();
     }
 
     ~CLayeredInfo()
@@ -97,12 +90,11 @@ public:
     */
     HRESULT UpdateLayered(HWND hWnd, IWICBitmap *pBitmap)
     {
-        HRESULT hr = S_OK;
-        ID2D1RenderTarget *pTarget = NULL;
+        CComPtr<ID2D1RenderTarget> pTarget;
         POINT pt = { 0, 0 };
         UINT uWidth, uHight;
 
-        hr = m_pD2DFactory->CreateWicBitmapRenderTarget(pBitmap, CRenderTargetDC::mD2DProperties, &pTarget);
+        HRESULT hr = m_pD2DFactory->CreateWicBitmapRenderTarget(pBitmap, CRenderTargetDC::mD2DProperties, &pTarget);
         HR_CHECK(hr);
 
         hr = pBitmap->GetSize(&uWidth, &uHight);
@@ -118,7 +110,6 @@ public:
         // 绘制窗体
         BOOL_CHECK(::UpdateLayeredWindow(hWnd, NULL, NULL, &m_size, CRenderTargetDC(pTarget), &pt, 0, &m_blend, ULW_ALPHA));
     exit:
-        SAFE_RELEASE(pTarget);
         return hr;
     }
 

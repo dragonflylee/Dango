@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Dango.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Dango.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -60,8 +55,13 @@
     <ClInclude Include="WidgetFrm.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Frame.h">
+    <ClInclude Include="BtnWnd.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\Dango.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -10,45 +10,42 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     HRESULT hr = S_OK;
-    MSG msg = {};
-    TCHAR szText[MAX_PATH];
+    MSG msg = { };
+    CAtlString szText;
     CMainFrm wndMain;
 
     HANDLE hMutex = ::CreateMutex(NULL, TRUE, TEXT("CDangoHelper"));
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        ::LoadString(hInstance, IDS_RUNNING, szText, _countof(szText));
-        return ::MessageBox(HWND_DESKTOP, szText, NULL, MB_ICONWARNING);
+        szText.LoadString(IDS_RUNNING);
+        return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::GetWndCaption(), MB_ICONWARNING);
     }
     
     hr = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     HR_CHECK(hr);
 
-    HWND hWnd = wndMain.Create(hInstance, HWND_DESKTOP);
+    hr = _Module.Init(NULL, hInstance);
+    HR_CHECK(hr);
+
+    HWND hWnd = wndMain.Create(HWND_DESKTOP);
     BOOL_CHECK(hWnd);
-
-    ::ShowWindow(hWnd, nCmdShow);
-
-    HACCEL hAccMain = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAIN));
+    wndMain.ShowWindow(nCmdShow);
     // 主消息循环:
     while (::GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(hWnd, hAccMain, &msg))
-        {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-        }
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
     }
 
+    _Module.Term();
     ::CoUninitialize();
+
     ::CloseHandle(hMutex);
 exit:
     if (FAILED(hr))
     {
-        TCHAR szFormat[MAX_PATH];
-        ::LoadString(hInstance, IDS_ERROR, szFormat, _countof(szFormat));
-        _stprintf_s(szText, _countof(szText), szFormat, hr);
-        wndMain.MessageBox(szText, MB_ICONERROR);
+        szText.Format(IDS_ERROR, hr);
+        wndMain.MessageBox(szText, CMainFrm::GetWndCaption(), MB_ICONERROR);
     }
     return (int)msg.wParam;
 }

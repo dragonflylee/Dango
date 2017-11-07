@@ -97,7 +97,7 @@ BEGIN
 POPUP "Popup"
 BEGIN
     MENUITEM "总在最前(&T)", IDM_TOPMOST
-    MENUITEM "更换图像(&C)", IDM_OPENIMG
+    MENUITEM "打开图像(&O)", IDM_OPENIMG
     MENUITEM "关于(&A)", IDM_ABOUT
     MENUITEM "退出(&X)", IDM_EXIT
 END
@@ -191,7 +191,7 @@ BEGIN
 POPUP "Popup"
 BEGIN
     MENUITEM "&Topmost", IDM_TOPMOST
-    MENUITEM "&Change Image", IDM_OPENIMG
+    MENUITEM "&Open Image", IDM_OPENIMG
     MENUITEM "&About", IDM_ABOUT
     MENUITEM "E&xit", IDM_EXIT
 END
@@ -208,7 +208,9 @@ IDR_MAIN                ICON                    "res\\Dango.ico"
 // RCDATA
 //
 
-IDR_MAIN                RCDATA                  "res\\launch.png"
+IDR_MAIN                RCDATA                  "res\\launch_normal.png"
+IDR_HOVER               RCDATA                  "res\\launch_hover.png"
+IDR_PRESS               RCDATA                  "res\\launch_press.png"
 
 
 #endif    // 英语(美国) resources

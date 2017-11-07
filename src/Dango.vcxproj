@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{CBDDB98D-4625-4D3C-B1EA-E958EF1CFBD4}</ProjectGuid>
+    <ProjectGuid>{452A17F7-EC29-48DF-BFDF-73AD2D84C638}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Dango</RootNamespace>
   </PropertyGroup>
@@ -53,10 +53,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -67,11 +69,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,9 +86,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Image Include="Dango.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Dango.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="StdAfx.cpp" />
@@ -94,7 +95,7 @@
     <ResourceCompile Include="Dango.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Frame.h" />
+    <ClInclude Include="BtnWnd.h" />
     <ClInclude Include="Layered.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />
@@ -102,6 +103,9 @@
     <ClInclude Include="Version.h" />
     <ClInclude Include="WICImage.h" />
     <ClInclude Include="WidgetFrm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\Dango.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
