@@ -96,8 +96,9 @@ IDR_MAIN MENU
 BEGIN
     POPUP "Popup"
     BEGIN
-        MENUITEM "总在最前(&T)", IDM_TOPMOST
-        MENUITEM "打开图像(&O)", IDM_OPENIMG
+        MENUITEM "总在最前(&T)", IDM_TOP
+        MENUITEM "打开图像(&O)", IDM_OPEN
+        MENUITEM "开机启动(&S)", IDM_STARTUP
         MENUITEM "关于(&A)", IDM_ABOUT
         MENUITEM "退出(&X)", IDM_EXIT
     END
@@ -190,8 +191,9 @@ IDR_MAIN MENU
 BEGIN
     POPUP "Popup"
     BEGIN
-        MENUITEM "&Topmost", IDM_TOPMOST
-        MENUITEM "&Open Image", IDM_OPENIMG
+        MENUITEM "&Topmost", IDM_TOP
+        MENUITEM "&Open Image", IDM_OPEN
+        MENUITEM "&Startup", IDM_STARTUP
         MENUITEM "&About", IDM_ABOUT
         MENUITEM "E&xit", IDM_EXIT
     END

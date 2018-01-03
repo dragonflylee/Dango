@@ -2,6 +2,9 @@
 #include "MainFrm.h"
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
+// 开机启动相关注册表
+LPCTSTR _szRegRun = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+LPCTSTR _szStartup = TEXT("Dango");
 
 LPCTSTR CMainFrm::GetWndCaption()
 {
@@ -12,6 +15,7 @@ LPCTSTR CMainFrm::GetWndCaption()
 
 LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
+    ATL::CRegKey hReg;
     HRESULT hr = S_OK;
 
     // 设置窗体图标
@@ -37,6 +41,13 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     m_hMenu = ::LoadMenu(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(m_hMenu);
 
+    // 读取开启启动
+    HR_CHECK(HRESULT_FROM_WIN32(hReg.Open(HKEY_CURRENT_USER, _szRegRun, KEY_QUERY_VALUE)));
+    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, NULL, NULL, NULL))
+    {
+        ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
+    }
+
     // 从获配置文件保存路径
     BOOL_CHECK(::SHGetSpecialFolderPath(m_hWnd, m_config, CSIDL_APPDATA, TRUE));
     BOOL_CHECK(::PathCombine(m_config, m_config, TEXT("Dango.ini")));
@@ -50,7 +61,7 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     HWND hAfter = HWND_TOP;
     if (::GetPrivateProfileInt(TEXT("Main"), TEXT("TopMost"), 0, m_config))
     {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_CHECKED);
+        ::CheckMenuItem(m_hMenu, IDM_TOP, MF_CHECKED);
         hAfter = HWND_TOPMOST;
     }
     BOOL_CHECK(SetWindowPos(hAfter, &rcWnd, SWP_NOSIZE | SWP_NOACTIVATE));
@@ -176,8 +187,23 @@ LRESULT CMainFrm::OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
 
 LRESULT CMainFrm::OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) ^ MF_CHECKED;
-    ::CheckMenuItem(m_hMenu, IDM_TOPMOST, nCheck);
+    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOP, MF_BYCOMMAND) ^ MF_CHECKED;
+    ::CheckMenuItem(m_hMenu, IDM_TOP, nCheck);
     ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), nCheck ? TEXT("1") : TEXT("0"), m_config);
     return SetWindowPos(nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+}
+
+LRESULT CMainFrm::OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+    ATL::CRegKey hReg;
+    hReg.Open(HKEY_CURRENT_USER, _szRegRun, KEY_QUERY_VALUE | KEY_SET_VALUE);
+    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, NULL, NULL, NULL))
+    {
+        hReg.DeleteValue(_szStartup);
+        return ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_UNCHECKED);
+    }
+    TCHAR szPath[MAX_PATH] = { 0 };
+    GetModuleFileName(_Module.get_m_hInst(), szPath, _countof(szPath));
+    hReg.SetStringValue(_szStartup, szPath);
+    return ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
 }

@@ -24,8 +24,9 @@ public:
         MESSAGE_HANDLER(CMainFrm::WM_TASKBARCREATED, OnTaskbarCreated)
         COMMAND_ID_HANDLER(IDM_EXIT, OnExit)
         COMMAND_ID_HANDLER(IDM_ABOUT, OnAbout)
-        COMMAND_ID_HANDLER(IDM_OPENIMG, OnOpen)
-        COMMAND_ID_HANDLER(IDM_TOPMOST, OnTop)
+        COMMAND_ID_HANDLER(IDM_OPEN, OnOpen)
+        COMMAND_ID_HANDLER(IDM_TOP, OnTop)
+        COMMAND_ID_HANDLER(IDM_STARTUP, OnStartup)
     END_MSG_MAP()
 
 public:
@@ -48,6 +49,7 @@ public:
     LRESULT OnAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
     HMENU m_hMenu;

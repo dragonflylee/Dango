@@ -12,8 +12,9 @@
 #define IDS_ERROR                  404
 #define IDM_EXIT                   4001
 #define IDM_ABOUT                  4002
-#define IDM_TOPMOST                4003
-#define IDM_OPENIMG                4004
+#define IDM_TOP                    4003
+#define IDM_OPEN                   4004
+#define IDM_STARTUP                4005
 #ifndef IDC_STATIC
 #define IDC_STATIC                  -1
 #endif
