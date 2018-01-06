@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BtnWnd.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="Layered.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />

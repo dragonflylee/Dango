@@ -10,11 +10,13 @@
 #define IDS_FILTER                 402
 #define IDS_RUNNING                403
 #define IDS_ERROR                  404
+#define IDS_REMOVE                 405
 #define IDM_EXIT                   4001
 #define IDM_ABOUT                  4002
 #define IDM_TOP                    4003
 #define IDM_OPEN                   4004
 #define IDM_STARTUP                4005
+#define IDM_TRANSPARENT            4006
 #ifndef IDC_STATIC
 #define IDC_STATIC                  -1
 #endif

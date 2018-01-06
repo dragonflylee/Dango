@@ -3,6 +3,10 @@
 
 #include "BtnWnd.h"
 
+/* 透明度菜单定义 */
+static const WORD _nStartAlpha = IDM_TRANSPARENT + 1000;
+static const WORD _nEndAlpha = _nStartAlpha + 0xFF;
+
 class CWidgetFrm : public CWindowImpl<CWidgetFrm, CWindow, CLayeredTraits>
 {
 public:
@@ -11,14 +15,12 @@ public:
     BEGIN_MSG_MAP(CWidgetFrm)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContext)
         MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
-        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-        MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHover)
-        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+        COMMAND_ID_HANDLER(IDM_EXIT, OnExit)
+        COMMAND_RANGE_HANDLER(_nStartAlpha, _nEndAlpha, OnTransparent)
     END_MSG_MAP()
 
 public:
@@ -27,14 +29,15 @@ public:
     */
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnRButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnShowWindow(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnMouseHover(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnMouseLeave(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    /**
+    * 右键菜单相关
+    */
+    LRESULT OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnTransparent(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
     /**
@@ -43,19 +46,18 @@ private:
     LRESULT OnRender();
 
 private:
-    LPCWSTR m_szPath;
-    BOOL m_bTracking;
+    HMENU m_hMenu;
     UINT_PTR m_uTimer;
     CLayeredInfo m_layered;
     CWICImage m_image;
-    CBtnClose m_close;
+    CAtlString m_szPath;
 
 private:
     CWidgetFrm&operator=(const CWidgetFrm&);
     CWidgetFrm(const CWidgetFrm&);
 
 public:
-    CWidgetFrm(LPCWSTR szPath = NULL) : m_szPath(szPath), m_bTracking(FALSE), m_uTimer(1), m_layered(0xCC) {}
+    CWidgetFrm(LPCTSTR szPath = NULL);
 };
 
 template<> class CElementTraits<CWidgetFrm> : public CElementTraitsBase<CWidgetFrm>

@@ -25,7 +25,7 @@ public:
         COMMAND_ID_HANDLER(IDM_EXIT, OnExit)
         COMMAND_ID_HANDLER(IDM_ABOUT, OnAbout)
         COMMAND_ID_HANDLER(IDM_OPEN, OnOpen)
-        COMMAND_ID_HANDLER(IDM_TOP, OnTop)
+        COMMAND_ID_HANDLER(IDM_TOP, OnStayOnTop)
         COMMAND_ID_HANDLER(IDM_STARTUP, OnStartup)
     END_MSG_MAP()
 
@@ -48,18 +48,16 @@ public:
     LRESULT OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-    LRESULT OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnStayOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
     HMENU m_hMenu;
     NOTIFYICONDATA m_ncd;
-    TCHAR m_config[MAX_PATH];
     // 任务栏重启消息
     static UINT WM_TASKBARCREATED;
 
     CAtlList<CWidgetFrm> m_pWidget;
-
 public:
     CMainFrm() : CButtonBase(IDR_MAIN), m_hMenu(NULL) {}
 };

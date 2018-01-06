@@ -23,5 +23,6 @@ extern CComModule _Module;
 #define BOOL_CHECK(_hr_) if (!(_hr_)) { hr = HRESULT_FROM_WIN32(::GetLastError()); ATLTRACE(TEXT("0x%.8x\n"), hr); goto exit; }
 
 #include "Resource.h"
+#include "Config.h"
 
 #endif // _STDAFX_H_

@@ -16,12 +16,16 @@ LPCTSTR CMainFrm::GetWndCaption()
 LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
     ATL::CRegKey hReg;
+    CAtlString szName;
     HRESULT hr = S_OK;
 
     // 设置窗体图标
     HICON hIcon = ::LoadIcon(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(hIcon);
     SetIcon(hIcon);
+
+    // 初始化配置文件
+    HR_CHECK(CConfig::Init(szName));
 
     // 允许拖放文件
     ::DragAcceptFiles(m_hWnd, TRUE);
@@ -48,23 +52,25 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
         ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
     }
 
-    // 从获配置文件保存路径
-    BOOL_CHECK(::SHGetSpecialFolderPath(m_hWnd, m_config, CSIDL_APPDATA, TRUE));
-    BOOL_CHECK(::PathCombine(m_config, m_config, TEXT("Dango.ini")));
-
-    // 读取坐标
-    RECT rcWnd;
-    rcWnd.left = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Left"), 0, m_config);
-    rcWnd.top = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Top"), 0, m_config);
-
     // 读取总在最前配置
     HWND hAfter = HWND_TOP;
-    if (::GetPrivateProfileInt(TEXT("Main"), TEXT("TopMost"), 0, m_config))
+    if (CConfig::Main().StayOnTop())
     {
         ::CheckMenuItem(m_hMenu, IDM_TOP, MF_CHECKED);
         hAfter = HWND_TOPMOST;
     }
-    BOOL_CHECK(SetWindowPos(hAfter, &rcWnd, SWP_NOSIZE | SWP_NOACTIVATE));
+    BOOL_CHECK(SetWindowPos(hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
+
+    // 处理子窗口
+    for (LPTSTR szImage = szName.GetBuffer(); *szImage; szImage += _tcslen(szImage) + 1)
+    {
+        if (::PathFileExists(szImage) && CConfig::Widget(szImage).Show())
+        {
+            POSITION nSize = m_pWidget.AddTail(szImage);
+            HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
+            if (NULL != hWnd) ::ShowWindow(hWnd, SW_SHOW);
+        }
+    }
 exit:
     // 返回 -1 表示窗口创建失败
     return SUCCEEDED(hr) ? 0 : -1;
@@ -75,10 +81,8 @@ LRESULT CMainFrm::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
     CAtlString szValue;
     RECT rcWnd;
     GetWindowRect(&rcWnd);
-    szValue.Format(TEXT("%d"), rcWnd.top);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("Top"), szValue, m_config);
-    szValue.Format(TEXT("%d"), rcWnd.left);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("Left"), szValue, m_config);
+    CConfig::Main().Left(rcWnd.left);
+    CConfig::Main().Top(rcWnd.top);
 
     // 移除所有子窗口
     m_pWidget.RemoveAll();
@@ -185,11 +189,11 @@ LRESULT CMainFrm::OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
     return ::ShowWindow(hWnd, SW_SHOW);
 }
 
-LRESULT CMainFrm::OnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainFrm::OnStayOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
     UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOP, MF_BYCOMMAND) ^ MF_CHECKED;
     ::CheckMenuItem(m_hMenu, IDM_TOP, nCheck);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), nCheck ? TEXT("1") : TEXT("0"), m_config);
+    CConfig::Main().StayOnTop(nCheck);
     return SetWindowPos(nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 

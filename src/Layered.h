@@ -60,19 +60,22 @@ typedef CWinTraits<WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW> CLayeredTraits;
 class CLayeredInfo
 {
 public:
+    BYTE GetAlpha() { return m_blend.SourceConstantAlpha; }
+
     /**
     * 改变窗体透明度
     */
-    BOOL SetAlpha(HWND hWnd, BYTE alpha)
+    HRESULT SetAlpha(HWND hWnd, BYTE alpha)
     {
         m_blend.SourceConstantAlpha = alpha;
-        return ::UpdateLayeredWindow(hWnd, NULL, NULL, NULL, NULL, NULL, 0, &m_blend, 0);
+        if (::UpdateLayeredWindow(hWnd, NULL, NULL, NULL, NULL, NULL, 0, &m_blend, ULW_ALPHA)) return S_OK;
+        return HRESULT_FROM_WIN32(::GetLastError());
     }
     
     /**
     * 改变窗体位置
     */
-    BOOL SetPosition(HWND hWnd, LPPOINT ptDst)
+    HRESULT SetPosition(HWND hWnd, LPPOINT ptDst)
     {
         // 获取显示器信息
         MONITORINFO minfo = { sizeof(MONITORINFO) };
@@ -85,7 +88,8 @@ public:
             if (ptDst->y + m_size.cy > minfo.rcWork.bottom) ptDst->y = minfo.rcWork.bottom - m_size.cy;
             if (ptDst->y < minfo.rcWork.top) ptDst->y = minfo.rcWork.top;
         }
-        return ::UpdateLayeredWindow(hWnd, NULL, ptDst, NULL, NULL, NULL, 0, NULL, 0);
+        if (::UpdateLayeredWindow(hWnd, NULL, ptDst, NULL, NULL, NULL, 0, NULL, 0)) return S_OK;
+        return HRESULT_FROM_WIN32(::GetLastError());
     }
 
     /**
