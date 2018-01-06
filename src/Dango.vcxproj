@@ -94,6 +94,7 @@
     <ResourceCompile Include="Dango.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="Frame.h" />
     <ClInclude Include="Layered.h" />
     <ClInclude Include="MainFrm.h" />

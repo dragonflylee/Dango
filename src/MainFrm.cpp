@@ -6,12 +6,23 @@
 #define WM_ICON WM_USER + 180
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
+TCHAR CMainFrm::szTitle[MAX_PATH] = { 0 };
+
+// 开机启动相关注册表
+LPCTSTR _szRegRun = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+LPCTSTR _szStartup = TEXT("Dango");
 
 LRESULT CMainFrm::OnCreate()
 {
     HRESULT hr = S_OK;
-    POINT ptWnd = { 0, 0 };
+    
+    // 加载图片
     CWICImage img;
+    HR_CHECK(img.Load(m_hInst, MAKEINTRESOURCE(IDR_MAIN), RT_RCDATA));
+    HR_CHECK(m_layered.UpdateLayered(m_hWnd, CRenderTarget(img)));
+
+    // 初始化配置文件
+    HR_CHECK(CConfig::Init());
 
     // 初始化托盘图标
     ZeroMemory(&m_ncd, sizeof(m_ncd));
@@ -27,27 +38,18 @@ LRESULT CMainFrm::OnCreate()
     // 加载菜单
     m_hMenu = ::LoadMenu(m_hInst, MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(m_hMenu);
-
-    // 从获配置文件保存路径
-    BOOL_CHECK(::SHGetSpecialFolderPath(m_hWnd, m_config, CSIDL_APPDATA, TRUE));
-    BOOL_CHECK(::PathCombine(m_config, m_config, TEXT("Dango.ini")));
-
-    // 加载图片
-    HR_CHECK(img.Load(m_hInst, MAKEINTRESOURCE(IDR_MAIN), RT_RCDATA));
-    HR_CHECK(m_layered.UpdateLayered(m_hWnd, CRenderTarget(img)));
-   
-    // 读取坐标
-    ptWnd.x = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Left"), 0, m_config);
-    ptWnd.y = ::GetPrivateProfileInt(TEXT("Main"), TEXT("Top"), 0, m_config);
+    // 读取开启启动
+    OnStartUp(FALSE);
 
     // 读取总在最前配置
     HWND hAfter = HWND_TOP;
-    if (::GetPrivateProfileInt(TEXT("Main"), TEXT("TopMost"), 0, m_config))
+    if (CConfig::Main().StayOnTop())
     {
-        ::CheckMenuItem(m_hMenu, IDM_TOPMOST, MF_CHECKED);
+        ::CheckMenuItem(m_hMenu, IDM_TOP, MF_CHECKED);
         hAfter = HWND_TOPMOST;
     }
-    BOOL_CHECK(::SetWindowPos(m_hWnd, hAfter, ptWnd.x, ptWnd.y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
+    // 读取坐标
+    BOOL_CHECK(::SetWindowPos(m_hWnd, hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
 exit:
     // 返回 -1 表示窗口创建失败
     return SUCCEEDED(hr) ? 0 : -1;
@@ -55,13 +57,10 @@ exit:
 
 LRESULT CMainFrm::OnDestroy()
 {
-    TCHAR szValue[10];
     RECT rcWnd;
     ::GetWindowRect(m_hWnd, &rcWnd);
-    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rcWnd.top);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("Top"), szValue, m_config);
-    _stprintf_s(szValue, _countof(szValue), TEXT("%d"), rcWnd.left);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("Left"), szValue, m_config);
+    CConfig::Main().Left(rcWnd.left);
+    CConfig::Main().Top(rcWnd.top);
 
     // 删除托盘图标
     ::Shell_NotifyIcon(NIM_DELETE, &m_ncd);
@@ -73,15 +72,45 @@ LRESULT CMainFrm::OnDestroy()
     return S_OK;
 }
 
-LRESULT CMainFrm::OnTopMost()
+LRESULT CMainFrm::OnStayOnTop()
 {
-    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOPMOST, MF_BYCOMMAND) ^ MF_CHECKED;
-    ::CheckMenuItem(m_hMenu, IDM_TOPMOST, nCheck);
-    ::WritePrivateProfileString(TEXT("Main"), TEXT("TopMost"), nCheck ? TEXT("1") : TEXT("0"), m_config);
+    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOP, MF_BYCOMMAND) ^ MF_CHECKED;
+    ::CheckMenuItem(m_hMenu, IDM_TOP, nCheck);
+    CConfig::Main().StayOnTop(nCheck);
     return ::SetWindowPos(m_hWnd, nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
-LRESULT CMainFrm::OnChangeImage()
+LRESULT CMainFrm::OnStartUp(BOOL bSet)
+{
+    HRESULT hr = S_OK;
+    HKEY hReg = NULL;
+    DWORD uOptions = KEY_QUERY_VALUE | KEY_WOW64_64KEY;
+    if (bSet) uOptions |= KEY_SET_VALUE;
+    HR_CHECK(HRESULT_FROM_WIN32(::RegOpenKeyEx(HKEY_CURRENT_USER, _szRegRun, 0, uOptions, &hReg)));
+
+    hr = HRESULT_FROM_WIN32(::RegQueryValueEx(hReg, _szStartup, 0, NULL, NULL, NULL));
+    if (!bSet) 
+    {
+        ::CheckMenuItem(m_hMenu, IDM_STARTUP, SUCCEEDED(hr) ? MF_CHECKED : MF_UNCHECKED);
+    }
+    else if (SUCCEEDED(hr))
+    {
+        HR_CHECK(HRESULT_FROM_WIN32(::RegDeleteValue(hReg, _szStartup)));
+        ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_UNCHECKED);
+    }
+    else
+    {
+        TCHAR szPath[MAX_PATH] = { 0 };
+        DWORD nSize = ::GetModuleFileName(m_hInst, szPath, _countof(szPath));
+        HR_CHECK(HRESULT_FROM_WIN32(::RegSetValueEx(hReg, _szStartup, 0, REG_SZ, (const BYTE*)szPath, nSize * sizeof(TCHAR))));
+        ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
+    }
+exit:
+    if (NULL != hReg) ::RegCloseKey(hReg);
+    return hr;
+}
+
+LRESULT CMainFrm::OnOpenImage()
 {
     TCHAR szFilter[MAX_PATH], szImage[MAX_PATH] = { 0 };
     ::LoadString(m_hInst, IDS_FILTER, szFilter, _countof(szFilter));
@@ -89,7 +118,7 @@ LRESULT CMainFrm::OnChangeImage()
  
     OPENFILENAME ofn = { sizeof(OPENFILENAME) };
     ofn.hwndOwner = m_hWnd;
-    ofn.lpstrTitle = m_szTitle;
+    ofn.lpstrTitle = CMainFrm::GetWndCaption();
     ofn.lpstrFilter = szFilter;
     ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
     ofn.nMaxFile = _countof(szImage);
@@ -97,10 +126,11 @@ LRESULT CMainFrm::OnChangeImage()
 
     if (!::GetOpenFileName(&ofn)) return FALSE;
 
-    m_pWidget = new CWidgetFrm(szImage);
-    HWND hWnd = m_pWidget->Create(m_hInst, m_hWnd);
-    if (NULL == hWnd) return FALSE;
-    return ::ShowWindow(hWnd, SW_SHOW);
+    CWidgetFrm *pWidget = new CWidgetFrm(szImage);
+    HWND hWnd = pWidget->Create(m_hInst, m_hWnd);
+    if (NULL != hWnd) return ::ShowWindow(hWnd, SW_SHOW);
+    delete pWidget;
+    return FALSE;
 }
 
 INT_PTR CALLBACK CMainFrm::AboutDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -127,13 +157,15 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         switch (LOWORD(wParam))
         {
         case IDM_EXIT:
-            return ::PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+            return ::PostMessage(hWnd, WM_CLOSE, 0, 0L);
         case IDM_ABOUT:
             return ::DialogBoxParam(m_hInst, MAKEINTRESOURCE(IDD_ABOUT), hWnd, CMainFrm::AboutDialogProc, (LPARAM)this);
-        case IDM_OPENIMG:
-            return OnChangeImage();
-        case IDM_TOPMOST:
-            return OnTopMost();
+        case IDM_OPEN:
+            return OnOpenImage();
+        case IDM_TOP:
+            return OnStayOnTop();
+        case IDM_STARTUP:
+            return OnStartUp(TRUE);
         }
         break;
     case WM_ICON:
@@ -170,7 +202,7 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
     case WM_CONTEXTMENU:
         // 右键菜单
-        return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);;
+        return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);
     case WM_DESTROY:
         return OnDestroy();
     }

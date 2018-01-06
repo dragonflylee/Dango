@@ -20,5 +20,6 @@
 #define BOOL_CHECK(_hr_) if (!(_hr_)) { hr = HRESULT_FROM_WIN32(::GetLastError()); goto exit; }
 
 #include "Resource.h"
+#include "Config.h"
 
 #endif // _STDAFX_H_

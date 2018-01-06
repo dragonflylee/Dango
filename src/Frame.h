@@ -23,14 +23,17 @@ public:
     virtual ~CFrameWnd() {}
 
     /**
+    * 获取窗体标题
+    */
+    static LPCTSTR GetWndCaption() { return NULL; }
+
+    /**
     * 创建窗体
     */
     HWND Create(HINSTANCE hInst, HWND hParent = HWND_DESKTOP)
     {
         TCHAR szAutoName[CHAR_BIT * 2];
         m_hInst = hInst;
-        // 加载标题
-        ::LoadString(hInst, nID, m_szTitle, _countof(m_szTitle));
 
         // 注册窗口类
         WNDCLASSEX& wc = T::GetWndClassInfo();
@@ -49,7 +52,7 @@ public:
             if (!::RegisterClassEx(&wc)) return NULL;
         }
 
-        return ::CreateWindowEx(dwStyleEx, wc.lpszClassName, m_szTitle, dwStyle,
+        return ::CreateWindowEx(dwStyleEx, wc.lpszClassName, T::GetWndCaption(), dwStyle,
             CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hParent, NULL, hInst, static_cast<T*>(this));
     }
 
@@ -58,7 +61,7 @@ public:
     */
     int MessageBox(LPCTSTR lpText, UINT uType)
     {
-        return ::MessageBox(m_hWnd, lpText, m_szTitle, uType);
+        return ::MessageBox(m_hWnd, lpText, T::GetWndCaption(), uType);
     }
 
 protected:
@@ -95,7 +98,6 @@ protected:
 protected:
     HWND m_hWnd;
     HINSTANCE m_hInst;
-    TCHAR m_szTitle[MAX_PATH];
 };
 
 #endif // _FRAME_WND_H_

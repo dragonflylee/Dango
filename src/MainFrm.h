@@ -9,7 +9,10 @@ class CWidgetFrm;
 class CMainFrm : public CFrameWnd<CMainFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW>, CLayeredInfo
 {
 public:
-    DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW + 1);
+    DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW);
+
+    static LPCTSTR GetWndCaption() { return szTitle; }
+
     /**
     * 消息处理
     */
@@ -19,8 +22,9 @@ public:
     /**
     * 右键菜单事件
     */
-    LRESULT OnTopMost();
-    LRESULT OnChangeImage();
+    LRESULT OnStayOnTop();
+    LRESULT OnOpenImage();
+    LRESULT OnStartUp(BOOL bSet);
 
     /**
     * 窗体消息循环
@@ -33,15 +37,14 @@ public:
 
 private:
     HMENU m_hMenu;
-    CWidgetFrm *m_pWidget;
-    TCHAR m_config[MAX_PATH];
     CLayeredInfo m_layered;
     NOTIFYICONDATA m_ncd;
     // 任务栏重启消息
     static UINT WM_TASKBARCREATED;
+    static TCHAR szTitle[MAX_PATH];
 
 public:
-    CMainFrm() : m_hMenu(NULL), m_pWidget(NULL) {}
+    CMainFrm() : m_hMenu(NULL) {}
 };
 
 #endif // _MAIN_FRM_H_
