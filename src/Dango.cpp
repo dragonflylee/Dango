@@ -4,8 +4,8 @@
 int Run(HINSTANCE hInst, int nCmdShow)
 {
     TCHAR szText[MAX_PATH];
+    
     CMainFrm wndMain;
-
     HWND hWnd = wndMain.Create(hInst, HWND_DESKTOP);
     if (NULL == hWnd)
     {
@@ -33,13 +33,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+    
+    ::LoadString(hInstance, IDR_MAIN, CMainFrm::szTitle, _countof(CMainFrm::szTitle));
 
     HANDLE hMutex = ::CreateMutex(NULL, TRUE, TEXT("CDangoHelper"));
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
     {
         TCHAR szText[MAX_PATH];
         ::LoadString(hInstance, IDS_RUNNING, szText, _countof(szText));
-        return ::MessageBox(HWND_DESKTOP, szText, NULL, MB_ICONWARNING);
+        return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::szTitle, MB_ICONWARNING);
     }
     
     ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);

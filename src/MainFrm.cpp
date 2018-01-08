@@ -6,6 +6,7 @@
 #define WM_ICON WM_USER + 180
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
+UINT CMainFrm::WM_WIDGETDESTROYED = WM_USER + WM_DESTROY;
 TCHAR CMainFrm::szTitle[MAX_PATH] = { 0 };
 
 // 开机启动相关注册表
@@ -15,6 +16,7 @@ LPCTSTR _szStartup = TEXT("Dango");
 LRESULT CMainFrm::OnCreate()
 {
     HRESULT hr = S_OK;
+    HLOCAL hName = NULL;
     
     // 加载图片
     CWICImage img;
@@ -22,7 +24,7 @@ LRESULT CMainFrm::OnCreate()
     HR_CHECK(m_layered.UpdateLayered(m_hWnd, CRenderTarget(img)));
 
     // 初始化配置文件
-    HR_CHECK(CConfig::Init());
+    HR_CHECK(CConfig::Init(hName));
 
     // 初始化托盘图标
     ZeroMemory(&m_ncd, sizeof(m_ncd));
@@ -50,7 +52,19 @@ LRESULT CMainFrm::OnCreate()
     }
     // 读取坐标
     BOOL_CHECK(::SetWindowPos(m_hWnd, hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
+
+    // 处理子窗口
+    for (LPTSTR szImage = (LPTSTR)::LocalLock(hName); *szImage; szImage += _tcslen(szImage) + 1)
+    {
+        if (::PathFileExists(szImage) && CConfig::Widget(szImage).Show())
+        {
+            CWidgetFrm *pWidget = new CWidgetFrm(szImage);
+            HWND hWnd = pWidget->Create(m_hInst, m_hWnd);
+            if (NULL != hWnd) ::ShowWindow(hWnd, SW_SHOW);
+        }
+    }
 exit:
+    if (NULL != hName) ::LocalFree(hName);
     // 返回 -1 表示窗口创建失败
     return SUCCEEDED(hr) ? 0 : -1;
 }
@@ -209,6 +223,11 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     if (CMainFrm::WM_TASKBARCREATED == uMsg)
     {
         return ::Shell_NotifyIcon(NIM_ADD, &m_ncd);
+    }
+    else if (CMainFrm::WM_WIDGETDESTROYED == uMsg)
+    {
+        delete reinterpret_cast<CWidgetFrm *>(lParam);
+        return S_OK;
     }
     return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 }

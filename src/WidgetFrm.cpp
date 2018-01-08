@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "WidgetFrm.h"
+#include "MainFrm.h"
 
 /* 透明度菜单定义 */
 static const UINT _nStartAlpha = IDM_TRANSPARENT + 1000;
@@ -52,8 +53,7 @@ LRESULT CWidgetFrm::OnDestroy()
     // 释放菜单资源
     if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
 
-    delete this;
-    return S_OK;
+    return ::PostMessage(::GetParent(m_hWnd), CMainFrm::WM_WIDGETDESTROYED, 0, reinterpret_cast<LPARAM>(this));
 }
 
 LRESULT CWidgetFrm::OnRender()
@@ -71,12 +71,13 @@ LRESULT CWidgetFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     case WM_COMMAND:
         if (IDM_EXIT == LOWORD(wParam))
         {
+            CConfig::Widget(m_szPath).Show(FALSE);
             return ::PostMessage(hWnd, WM_CLOSE, 0, 0L);
         }
-        if (::CheckMenuRadioItem(m_hMenu, _nStartAlpha, _nEndAlpha, wParam, MF_BYCOMMAND))
+        if (::CheckMenuRadioItem(m_hMenu, _nStartAlpha, _nEndAlpha, (UINT)wParam, MF_BYCOMMAND))
         {
             wParam -= _nStartAlpha;
-            CConfig::Widget(m_szPath).Alpha(wParam);
+            CConfig::Widget(m_szPath).Alpha((int)wParam);
             return m_layered.SetAlpha(m_hWnd, (BYTE)(wParam));
         }
     case WM_LBUTTONDOWN:
@@ -89,7 +90,7 @@ LRESULT CWidgetFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     case WM_SHOWWINDOW:
         if (TRUE == wParam)
         {
-
+            CConfig::Widget(m_szPath).Show(TRUE);
             return OnRender();
         }
         ::KillTimer(hWnd, m_uTimer);

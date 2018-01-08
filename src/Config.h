@@ -30,12 +30,23 @@ public:
     /**
      * 初始化配置类
      */
-    static HRESULT Init()
+    static HRESULT Init(HLOCAL &hName)
     {
         HRESULT hr = S_OK;
+        DWORD uAlloc = MAX_PATH;
         // 从获配置文件保存路径
         BOOL_CHECK(::SHGetSpecialFolderPath(HWND_DESKTOP, m_szPath, CSIDL_APPDATA, TRUE));
         BOOL_CHECK(::PathCombine(m_szPath, m_szPath, TEXT("Dango.ini")));
+
+        hName = ::LocalAlloc(LPTR, uAlloc);
+        BOOL_CHECK(hName);
+        // 获取图像节点
+        while (::GetPrivateProfileSectionNames((LPTSTR)::LocalLock(hName), uAlloc, m_szPath) > uAlloc - 2)
+        {
+            uAlloc *= 2;
+            hName = ::LocalReAlloc(hName, uAlloc, LMEM_ZEROINIT);
+            BOOL_CHECK(hName);
+        }
     exit:
         return hr;
     }
