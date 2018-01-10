@@ -41,7 +41,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     {
         TCHAR szText[MAX_PATH];
         ::LoadString(hInstance, IDS_RUNNING, szText, _countof(szText));
-        return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::szTitle, MB_ICONWARNING);
+        return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::GetWndCaption(), MB_ICONWARNING);
     }
     
     ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);

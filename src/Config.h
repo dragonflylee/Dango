@@ -16,8 +16,8 @@ class CConfig
 {
 public:
     BEGIN_INI_SECTION(Main)
-        DEF_INI_ITEM(Left, int, 0)
-        DEF_INI_ITEM(Top, int, 0)
+        DEF_INI_ITEM(Left, int, 100)
+        DEF_INI_ITEM(Top, int, 100)
         DEF_INI_ITEM(StayOnTop, int, 0)
     END_INI_SECTION()
 

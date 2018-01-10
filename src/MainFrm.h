@@ -11,6 +11,8 @@ class CMainFrm : public CFrameWnd<CMainFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_TOOL
 public:
     DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW);
 
+    static LPCTSTR GetWndCaption() { return szTitle; }
+
     /**
     * 消息处理
     */
