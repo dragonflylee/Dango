@@ -16,16 +16,15 @@ LPCTSTR _szStartup = TEXT("Dango");
 LRESULT CMainFrm::OnCreate()
 {
     HRESULT hr = S_OK;
-    HLOCAL hName = NULL;
-    
+    LPTSTR hName = NULL;
     // 加载图片
     CWICImage img;
     HR_CHECK(img.Load(m_hInst, MAKEINTRESOURCE(IDR_MAIN), RT_RCDATA));
     HR_CHECK(m_layered.UpdateLayered(m_hWnd, CRenderTarget(img)));
-
     // 初始化配置文件
     HR_CHECK(CConfig::Init(hName));
-
+    // 允许拖放文件
+    ::DragAcceptFiles(m_hWnd, TRUE);
     // 初始化托盘图标
     ZeroMemory(&m_ncd, sizeof(m_ncd));
     m_ncd.cbSize = sizeof(m_ncd);
@@ -36,13 +35,11 @@ LRESULT CMainFrm::OnCreate()
     m_ncd.uCallbackMessage = WM_ICON;
     m_ncd.dwInfoFlags = NIIF_USER;
     BOOL_CHECK(::Shell_NotifyIcon(NIM_ADD, &m_ncd));
-
     // 加载菜单
     m_hMenu = ::LoadMenu(m_hInst, MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(m_hMenu);
     // 读取开启启动
     OnStartUp(FALSE);
-
     // 读取总在最前配置
     HWND hAfter = HWND_TOP;
     if (CConfig::Main().StayOnTop())
@@ -52,15 +49,12 @@ LRESULT CMainFrm::OnCreate()
     }
     // 读取坐标
     BOOL_CHECK(::SetWindowPos(m_hWnd, hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
-
     // 处理子窗口
-    for (LPTSTR szImage = (LPTSTR)::LocalLock(hName); *szImage; szImage += _tcslen(szImage) + 1)
+    for (LPTSTR szImage = hName; *szImage; szImage += _tcslen(szImage) + 1)
     {
         if (::PathFileExists(szImage) && CConfig::Widget(szImage).Show())
         {
-            CWidgetFrm *pWidget = new CWidgetFrm(szImage);
-            HWND hWnd = pWidget->Create(m_hInst, m_hWnd);
-            if (NULL != hWnd) ::ShowWindow(hWnd, SW_SHOW);
+            CreaateWidget(szImage);
         }
     }
 exit:
@@ -75,14 +69,25 @@ LRESULT CMainFrm::OnDestroy()
     ::GetWindowRect(m_hWnd, &rcWnd);
     CConfig::Main().Left(rcWnd.left);
     CConfig::Main().Top(rcWnd.top);
-
     // 删除托盘图标
     ::Shell_NotifyIcon(NIM_DELETE, &m_ncd);
-
     // 释放菜单资源
     if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
-
     ::PostQuitMessage(0);
+    return S_OK;
+}
+
+LRESULT CMainFrm::OnDropFiles(HDROP hDrop)
+{
+    TCHAR szPath[MAX_PATH] = { 0 };
+    UINT uCount = ::DragQueryFile(hDrop, (UINT)-1, NULL, 0);
+    for (UINT iFile = 0; iFile < uCount; iFile++)
+    {
+        if (::DragQueryFile(hDrop, iFile, szPath, _countof(szPath)))
+        {
+            CreaateWidget(szPath);
+        }
+    }
     return S_OK;
 }
 
@@ -103,7 +108,7 @@ LRESULT CMainFrm::OnStartUp(BOOL bSet)
     HR_CHECK(HRESULT_FROM_WIN32(::RegOpenKeyEx(HKEY_CURRENT_USER, _szRegRun, 0, uOptions, &hReg)));
 
     hr = HRESULT_FROM_WIN32(::RegQueryValueEx(hReg, _szStartup, 0, NULL, NULL, NULL));
-    if (!bSet) 
+    if (!bSet)
     {
         ::CheckMenuItem(m_hMenu, IDM_STARTUP, SUCCEEDED(hr) ? MF_CHECKED : MF_UNCHECKED);
     }
@@ -129,7 +134,7 @@ LRESULT CMainFrm::OnOpenImage()
     TCHAR szFilter[MAX_PATH], szImage[MAX_PATH] = { 0 };
     ::LoadString(m_hInst, IDS_FILTER, szFilter, _countof(szFilter));
     for (LPTSTR pCurStr = szFilter; *pCurStr != TEXT('\0'); pCurStr++) if (*pCurStr == TEXT('|')) *pCurStr = TEXT('\0');
- 
+
     OPENFILENAME ofn = { sizeof(OPENFILENAME) };
     ofn.hwndOwner = m_hWnd;
     ofn.lpstrTitle = CMainFrm::GetWndCaption();
@@ -137,9 +142,13 @@ LRESULT CMainFrm::OnOpenImage()
     ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
     ofn.nMaxFile = _countof(szImage);
     ofn.lpstrFile = szImage;
-
     if (!::GetOpenFileName(&ofn)) return FALSE;
 
+    return CreaateWidget(szImage);
+}
+
+BOOL CMainFrm::CreaateWidget(LPCTSTR szImage)
+{
     CWidgetFrm *pWidget = new CWidgetFrm(szImage);
     HWND hWnd = pWidget->Create(m_hInst, m_hWnd);
     if (NULL != hWnd) return ::ShowWindow(hWnd, SW_SHOW);
@@ -214,6 +223,8 @@ LRESULT CMainFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         ::GetWindowRect(m_hWnd, &rcWnd);
         return m_layered.SetPosition(m_hWnd, (LPPOINT)&rcWnd);
     }
+    case WM_DROPFILES:
+        return OnDropFiles(reinterpret_cast<HDROP>(wParam));
     case WM_CONTEXTMENU:
         // 右键菜单
         return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);

@@ -30,7 +30,7 @@ public:
     /**
      * 初始化配置类
      */
-    static HRESULT Init(HLOCAL &hName)
+    static HRESULT Init(LPTSTR &hName)
     {
         HRESULT hr = S_OK;
         DWORD uAlloc = MAX_PATH;
@@ -38,13 +38,13 @@ public:
         BOOL_CHECK(::SHGetSpecialFolderPath(HWND_DESKTOP, m_szPath, CSIDL_APPDATA, TRUE));
         BOOL_CHECK(::PathCombine(m_szPath, m_szPath, TEXT("Dango.ini")));
 
-        hName = ::LocalAlloc(LPTR, uAlloc);
+        hName = (LPTSTR)::LocalAlloc(LPTR, uAlloc * sizeof(TCHAR));
         BOOL_CHECK(hName);
         // 获取图像节点
-        while (::GetPrivateProfileSectionNames((LPTSTR)::LocalLock(hName), uAlloc, m_szPath) > uAlloc - 2)
+        while (::GetPrivateProfileSectionNames(hName, uAlloc, m_szPath) == uAlloc - 2)
         {
             uAlloc *= 2;
-            hName = ::LocalReAlloc(hName, uAlloc, LMEM_ZEROINIT);
+            hName = (LPTSTR)::LocalReAlloc(hName, uAlloc * sizeof(TCHAR), LMEM_MOVEABLE | LMEM_ZEROINIT);
             BOOL_CHECK(hName);
         }
     exit:

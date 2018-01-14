@@ -6,7 +6,7 @@
 #define _VERTOSTRING(arg) #arg  
 #define VERTOSTRING(arg) _VERTOSTRING(arg) 
 #define VER_MAIN    0  
-#define VER_SUB     1  
+#define VER_SUB     2  
 #define VER_SUB2    0 
 #define VER_BUILD   2  
 #define VER_FULL    VERTOSTRING(VER_MAIN.VER_SUB.VER_SUB2)

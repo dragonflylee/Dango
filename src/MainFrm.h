@@ -12,28 +12,35 @@ public:
     DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW);
 
     static LPCTSTR GetWndCaption() { return szTitle; }
-
     /**
     * 消息处理
     */
     LRESULT OnCreate();
-    LRESULT OnDestroy();
+    /**
+    * 窗体消息循环
+    */
+    LRESULT DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+private:
+    /**
+    * 关于对话框
+    */
+    static INT_PTR CALLBACK AboutDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    /**
+    * 消息处理
+    */
+    LRESULT OnDestroy();
+    LRESULT OnDropFiles(HDROP hDrop);
     /**
     * 右键菜单事件
     */
     LRESULT OnStayOnTop();
     LRESULT OnOpenImage();
     LRESULT OnStartUp(BOOL bSet);
-
     /**
-    * 窗体消息循环
+    * 创建挂件
     */
-    LRESULT DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    /**
-    * 关于对话框
-    */
-    static INT_PTR CALLBACK AboutDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    BOOL CreaateWidget(LPCTSTR /*szImage*/);
 
 private:
     HMENU m_hMenu;
