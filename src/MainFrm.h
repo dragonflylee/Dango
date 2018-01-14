@@ -22,6 +22,7 @@ public:
         MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
         MESSAGE_HANDLER(WM_ICON, OnIcon)
         MESSAGE_HANDLER(CMainFrm::WM_TASKBARCREATED, OnTaskbarCreated)
+        MESSAGE_HANDLER(CMainFrm::WM_WIDGETDESTROYED, OnWidgetDestroyed)
         COMMAND_ID_HANDLER(IDM_EXIT, OnExit)
         COMMAND_ID_HANDLER(IDM_ABOUT, OnAbout)
         COMMAND_ID_HANDLER(IDM_OPEN, OnOpen)
@@ -30,7 +31,7 @@ public:
     END_MSG_MAP()
 
 public:
-    static LPCTSTR GetWndCaption();
+    static LPCTSTR GetWndCaption() { return TEXT("Dango"); }
     /**
     * 窗口事件相关
     */
@@ -42,6 +43,7 @@ public:
     LRESULT OnDropFiles(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnTaskbarCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+    LRESULT OnWidgetDestroyed(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     /**
     * 右键菜单相关
     */
@@ -52,6 +54,10 @@ public:
     LRESULT OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
+    /* 新建挂件 */
+    BOOL CreaateWidget(LPCTSTR /*szImage*/);
+
+private:
     HMENU m_hMenu;
     NOTIFYICONDATA m_ncd;
     // 任务栏重启消息
@@ -60,6 +66,8 @@ private:
     CAtlList<CWidgetFrm> m_pWidget;
 public:
     CMainFrm() : CButtonBase(IDR_MAIN), m_hMenu(NULL) {}
+    // 子窗口销毁消息
+    static UINT WM_WIDGETDESTROYED;
 };
 
 #endif // _MAIN_FRM_H_

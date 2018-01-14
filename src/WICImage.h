@@ -21,7 +21,7 @@ public:
         BOOL_CHECK(hSrc);
 
         hRes = ::LoadResource(_Module.GetModuleInstance(), hSrc);
-        BOOL_CHECK(hSrc);
+        BOOL_CHECK(hRes);
 
         DWORD cbSize = SizeofResource(_Module.GetModuleInstance(), hSrc);
         LPBYTE pData = (LPBYTE)::LockResource(hRes);

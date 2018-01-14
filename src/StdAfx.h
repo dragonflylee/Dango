@@ -13,7 +13,6 @@ extern CComModule _Module;
 // Windows м╥нд╪Ч:
 #include <shlobj.h>
 #include <shellapi.h>
-#include <shlobj.h>
 #include <Commdlg.h>
 #include <wincodec.h>
 #include <d2d1.h>

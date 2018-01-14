@@ -39,6 +39,8 @@ public:
     LRESULT OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnTransparent(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+    operator LPCTSTR() { return m_szPath; }
+
 private:
     /**
     * ´°Ìå¸üÐÂ
@@ -63,7 +65,9 @@ public:
 template<> class CElementTraits<CWidgetFrm> : public CElementTraitsBase<CWidgetFrm>
 {
 public:
-    typedef LPCWSTR INARGTYPE;
+    typedef LPCTSTR INARGTYPE;
+
+    static bool CompareElements(LPCTSTR elem1, LPCTSTR elem2) { return _tcscmp(elem1, elem2) == 0; }
 };
 
 #endif // _WIDGET_FRM_H_

@@ -33,18 +33,15 @@ public:
      static HRESULT Init(CAtlString& szName)
     {
         HRESULT hr = S_OK;
-        int uSize = MAX_PATH;
-        
+        DWORD uSize = MAX_PATH;
         // 从获配置文件保存路径
         BOOL_CHECK(::SHGetSpecialFolderPath(HWND_DESKTOP, m_szPath, CSIDL_APPDATA, TRUE));
         BOOL_CHECK(::PathCombine(m_szPath, m_szPath, TEXT("Dango.ini")));
         // 获取图像节点
-        do
+        while (::GetPrivateProfileSectionNames(szName.GetBuffer(uSize), uSize, m_szPath) == uSize - 2)
         {
             uSize *= 2;
-            LPTSTR szBuffer = szName.GetBuffer(uSize);
-            uSize = ::GetPrivateProfileSectionNames(szBuffer, szName.GetAllocLength(), m_szPath);
-        } while (uSize + 2 >= szName.GetAllocLength());
+        }
     exit:
         return hr;
     }

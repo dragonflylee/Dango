@@ -84,6 +84,7 @@ BEGIN
     IDS_EXIT                "确认要退出吗？"
     IDS_FILTER              "图像文件|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
     IDS_RUNNING             "貌似另一个我正在运行"
+    IDS_DUPLICATE           "图像 %s 已存在"
     IDS_ERROR               "发生了一个致命错误 (0x%.8X)"
 END
 
@@ -184,6 +185,7 @@ BEGIN
     IDS_EXIT                "Confirm quit"
     IDS_FILTER              "Image Files|*.bmp;*.dib;*.wdp;*.mdp;*.hdp;*.gif;*.png;*.jpg;*.jpeg;*.tif;*.ico|"
     IDS_RUNNING             "It seems that another me is running"
+    IDS_DUPLICATE           "Image %s has already exists"
     IDS_ERROR               "Oops, critical error happened (0x%.8X)"
 END
 

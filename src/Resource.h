@@ -10,7 +10,7 @@
 #define IDS_FILTER                 402
 #define IDS_RUNNING                403
 #define IDS_ERROR                  404
-#define IDS_REMOVE                 405
+#define IDS_DUPLICATE              405
 #define IDM_EXIT                   4001
 #define IDM_ABOUT                  4002
 #define IDM_TOP                    4003
@@ -26,8 +26,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        103
-#define _APS_NEXT_COMMAND_VALUE         40002
+#define _APS_NEXT_RESOURCE_VALUE        104
+#define _APS_NEXT_COMMAND_VALUE         40007
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

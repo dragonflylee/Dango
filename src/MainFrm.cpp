@@ -1,35 +1,26 @@
 #include "StdAfx.h"
 #include "MainFrm.h"
+#include "WidgetFrm.h"
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
+UINT CMainFrm::WM_WIDGETDESTROYED = WM_USER + WM_DESTROY;
 // 开机启动相关注册表
 LPCTSTR _szRegRun = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
 LPCTSTR _szStartup = TEXT("Dango");
 
-LPCTSTR CMainFrm::GetWndCaption()
-{
-    static CAtlString szTitle;
-    if (szTitle.IsEmpty()) szTitle.LoadString(IDR_MAIN);
-    return szTitle;
-}
-
-LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
     ATL::CRegKey hReg;
     CAtlString szName;
     HRESULT hr = S_OK;
-
     // 设置窗体图标
     HICON hIcon = ::LoadIcon(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(hIcon);
     SetIcon(hIcon);
-
     // 初始化配置文件
     HR_CHECK(CConfig::Init(szName));
-
     // 允许拖放文件
     ::DragAcceptFiles(m_hWnd, TRUE);
-
     // 初始化托盘图标
     ZeroMemory(&m_ncd, sizeof(m_ncd));
     m_ncd.cbSize = sizeof(m_ncd);
@@ -40,18 +31,15 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
     m_ncd.uCallbackMessage = WM_ICON;
     m_ncd.dwInfoFlags = NIIF_USER;
     BOOL_CHECK(::Shell_NotifyIcon(NIM_ADD, &m_ncd));
-
     // 加载菜单
     m_hMenu = ::LoadMenu(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
     BOOL_CHECK(m_hMenu);
-
     // 读取开启启动
     HR_CHECK(HRESULT_FROM_WIN32(hReg.Open(HKEY_CURRENT_USER, _szRegRun, KEY_QUERY_VALUE)));
     if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, NULL, NULL, NULL))
     {
         ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
     }
-
     // 读取总在最前配置
     HWND hAfter = HWND_TOP;
     if (CConfig::Main().StayOnTop())
@@ -60,17 +48,15 @@ LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
         hAfter = HWND_TOPMOST;
     }
     BOOL_CHECK(SetWindowPos(hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
-
     // 处理子窗口
-    for (LPTSTR szImage = szName.GetBuffer(); *szImage; szImage += _tcslen(szImage) + 1)
+    for (LPCTSTR szImage = szName; *szImage; szImage += _tcslen(szImage) + 1)
     {
         if (::PathFileExists(szImage) && CConfig::Widget(szImage).Show())
         {
-            POSITION nSize = m_pWidget.AddTail(szImage);
-            HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
-            if (NULL != hWnd) ::ShowWindow(hWnd, SW_SHOW);
+            CreaateWidget(szImage);
         }
     }
+    if (m_pWidget.GetCount() == 0) OnOpen(0, 0, m_hWnd, bHandled);
 exit:
     // 返回 -1 表示窗口创建失败
     return SUCCEEDED(hr) ? 0 : -1;
@@ -83,10 +69,8 @@ LRESULT CMainFrm::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
     GetWindowRect(&rcWnd);
     CConfig::Main().Left(rcWnd.left);
     CConfig::Main().Top(rcWnd.top);
-
     // 移除所有子窗口
     m_pWidget.RemoveAll();
-
     // 删除托盘图标
     ::Shell_NotifyIcon(NIM_DELETE, &m_ncd);
     // 释放菜单资源
@@ -117,15 +101,14 @@ LRESULT CMainFrm::OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOO
 
 LRESULT CMainFrm::OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
+    TCHAR szPath[MAX_PATH] = { 0 };
     HDROP hDrop = reinterpret_cast<HDROP>(wParam);
     UINT uCount = ::DragQueryFile(hDrop, (UINT)-1, NULL, 0);
-    TCHAR szPath[MAX_PATH];
-
     for (UINT iFile = 0; iFile < uCount; iFile++)
     {
         if (::DragQueryFile(hDrop, iFile, szPath, _countof(szPath)))
         {
-            ATLTRACE(TEXT("%s\n"), szPath);
+            CreaateWidget(szPath);
         }
     }
     return S_OK;
@@ -156,6 +139,15 @@ LRESULT CMainFrm::OnTaskbarCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
     return ::Shell_NotifyIcon(NIM_ADD, &m_ncd);
 }
 
+LRESULT CMainFrm::OnWidgetDestroyed(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+{
+    LPCTSTR szImage = reinterpret_cast<LPCTSTR>(lParam);
+    POSITION nPos = m_pWidget.Find(szImage);
+    if (NULL == nPos) return FALSE;
+    m_pWidget.RemoveAt(nPos);
+    return S_OK;
+}
+
 LRESULT CMainFrm::OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
     return PostMessage(WM_CLOSE);
@@ -180,13 +172,9 @@ LRESULT CMainFrm::OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
     ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
     ofn.nMaxFile = _countof(szImage);
     ofn.lpstrFile = szImage;
-
     if (!::GetOpenFileName(&ofn)) return FALSE;
 
-    POSITION nSize = m_pWidget.AddTail(szImage);
-    HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
-    if (NULL == hWnd) return FALSE;
-    return ::ShowWindow(hWnd, SW_SHOW);
+    return CreaateWidget(szImage);
 }
 
 LRESULT CMainFrm::OnStayOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -210,4 +198,20 @@ LRESULT CMainFrm::OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
     GetModuleFileName(_Module.get_m_hInst(), szPath, _countof(szPath));
     hReg.SetStringValue(_szStartup, szPath);
     return ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
+}
+
+BOOL CMainFrm::CreaateWidget(LPCTSTR szImage)
+{
+    POSITION nSize = m_pWidget.Find(szImage);
+    if (NULL != nSize)
+    {
+        CAtlString szText;
+        szText.Format(IDS_DUPLICATE, szImage);
+        return MessageBox(szText, CMainFrm::GetWndCaption(), MB_ICONINFORMATION);
+    }
+    nSize = m_pWidget.AddTail(szImage);
+    HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
+    if (NULL != hWnd) return ::ShowWindow(hWnd, SW_SHOW);
+    m_pWidget.RemoveAt(nSize);
+    return FALSE;
 }

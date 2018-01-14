@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "MainFrm.h"
 #include "WidgetFrm.h"
 
 CWidgetFrm::CWidgetFrm(LPCTSTR szPath) :
@@ -41,15 +42,12 @@ LRESULT CWidgetFrm::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
     ::GetWindowRect(m_hWnd, &rcWnd);
     CConfig::Widget(m_szPath).Left(rcWnd.left);
     CConfig::Widget(m_szPath).Top(rcWnd.top);
-
     // 删除定时器
     ::KillTimer(m_hWnd, m_uTimer);
-
     // 释放菜单资源
     if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
-
-    CConfig::Widget(m_szPath).Show(FALSE);
-    return S_OK;
+    // 通知主窗口
+    return ::PostMessage(GetParent(), CMainFrm::WM_WIDGETDESTROYED, 0, (LPARAM)(LPCTSTR)m_szPath);
 }
 
 LRESULT CWidgetFrm::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -67,7 +65,7 @@ LRESULT CWidgetFrm::OnShowWindow(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 {
     if (TRUE == wParam)
     {
-        CConfig::Widget(m_szPath).Show(wParam);
+        CConfig::Widget(m_szPath).Show((int)wParam);
         return OnRender();
     }
     bHandled = FALSE;
@@ -86,6 +84,7 @@ LRESULT CWidgetFrm::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 
 LRESULT CWidgetFrm::OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
+    CConfig::Widget(m_szPath).Show(FALSE);
     return PostMessage(WM_CLOSE);
 }
 
