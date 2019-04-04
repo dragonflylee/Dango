@@ -1,80 +1,61 @@
-#include "StdAfx.h"
+Ôªø#include "StdAfx.h"
 #include "MainFrm.h"
-#include "WidgetFrm.h"
+#include "Live2DFrm.h"
 
 UINT CMainFrm::WM_TASKBARCREATED = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
 UINT CMainFrm::WM_WIDGETDESTROYED = WM_USER + WM_DESTROY;
-// ø™ª˙∆Ù∂Øœ‡πÿ◊¢≤·±Ì
+// ÂºÄÊú∫ÂêØÂä®Áõ∏ÂÖ≥Ê≥®ÂÜåË°®
 LPCTSTR _szRegRun = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
 LPCTSTR _szStartup = TEXT("Dango");
 
-LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+CMainFrm::CMainFrm() : hMenu(nullptr)
+{
+
+}
+
+LRESULT CMainFrm::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
 {
     ATL::CRegKey hReg;
     CAtlString szName;
+    LPCREATESTRUCT pParam = reinterpret_cast<LPCREATESTRUCT>(lParam);
+    CLive2DFrm *pL2D = nullptr;
+
     HRESULT hr = S_OK;
-    // …Ë÷√¥∞ÃÂÕº±Í
-    HICON hIcon = ::LoadIcon(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
-    BOOL_CHECK(hIcon);
-    SetIcon(hIcon);
-    // ≥ı ºªØ≈‰÷√Œƒº˛
+    // ÂàùÂßãÂåñÈÖçÁΩÆÊñá‰ª∂
     HR_CHECK(CConfig::Init(szName));
-    // ‘ –ÌÕœ∑≈Œƒº˛
-    ::DragAcceptFiles(m_hWnd, TRUE);
-    // ≥ı ºªØÕ–≈ÃÕº±Í
-    ZeroMemory(&m_ncd, sizeof(m_ncd));
-    m_ncd.cbSize = sizeof(m_ncd);
-    m_ncd.hIcon = ::LoadIcon(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
-    m_ncd.hWnd = m_hWnd;
-    m_ncd.uID = IDR_MAIN;
-    m_ncd.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO | NIF_TIP;
-    m_ncd.uCallbackMessage = WM_ICON;
-    m_ncd.dwInfoFlags = NIIF_USER;
-    BOOL_CHECK(::Shell_NotifyIcon(NIM_ADD, &m_ncd));
-    // º”‘ÿ≤Àµ•
-    m_hMenu = ::LoadMenu(_Module.GetModuleInstance(), MAKEINTRESOURCE(IDR_MAIN));
-    BOOL_CHECK(m_hMenu);
-    // ∂¡»°ø™∆Ù∆Ù∂Ø
+    // ÂàùÂßãÂåñÊâòÁõòÂõæÊ†á
+    ZeroMemory(&ncd, sizeof(ncd));
+    ncd.cbSize = sizeof(ncd);
+    ncd.hIcon = ::LoadIcon(pParam->hInstance, MAKEINTRESOURCE(IDR_MAIN));
+    ncd.hWnd = m_hWnd;
+    ncd.uID = IDR_MAIN;
+    ncd.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO | NIF_TIP;
+    ncd.uCallbackMessage = WM_ICON;
+    ncd.dwInfoFlags = NIIF_USER;
+    BOOL_CHECK(::Shell_NotifyIcon(NIM_ADD, &ncd));
+    // Âä†ËΩΩËèúÂçï
+    hMenu = ::GetSubMenu(::LoadMenu(pParam->hInstance, MAKEINTRESOURCE(IDR_MAIN)), 0);
+    BOOL_CHECK(hMenu);
+    // ËØªÂèñÂºÄÂêØÂêØÂä®
     HR_CHECK(HRESULT_FROM_WIN32(hReg.Open(HKEY_CURRENT_USER, _szRegRun, KEY_QUERY_VALUE)));
-    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, NULL, NULL, NULL))
+    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, nullptr, nullptr, nullptr))
     {
-        ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
+        ::CheckMenuItem(hMenu, IDM_STARTUP, MF_CHECKED);
     }
-    // ∂¡»°◊‹‘⁄◊Ó«∞≈‰÷√
-    HWND hAfter = HWND_TOP;
-    if (CConfig::Main().StayOnTop())
-    {
-        ::CheckMenuItem(m_hMenu, IDM_TOP, MF_CHECKED);
-        hAfter = HWND_TOPMOST;
-    }
-    BOOL_CHECK(SetWindowPos(hAfter, CConfig::Main().Left(), CConfig::Main().Top(), 0, 0, SWP_NOSIZE | SWP_NOACTIVATE));
-    // ¥¶¿Ì◊”¥∞ø⁄
-    for (LPCTSTR szImage = szName; *szImage; szImage += _tcslen(szImage) + 1)
-    {
-        if (::PathFileExists(szImage) && CConfig::Widget(szImage).Show())
-        {
-            CreaateWidget(szImage);
-        }
-    }
-    if (m_pWidget.GetCount() == 0) OnOpen(0, 0, m_hWnd, bHandled);
+
+    pL2D = new CLive2DFrm(TEXT("Live2D"));
+    ::ShowWindow(pL2D->Create(m_hWnd), SW_SHOW);
 exit:
-    // ∑µªÿ -1 ±Ì æ¥∞ø⁄¥¥Ω® ß∞‹
+    // ËøîÂõû -1 Ë°®Á§∫Á™óÂè£ÂàõÂª∫Â§±Ë¥•
     return SUCCEEDED(hr) ? 0 : -1;
 }
 
 LRESULT CMainFrm::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
-    CAtlString szValue;
-    RECT rcWnd;
-    GetWindowRect(&rcWnd);
-    CConfig::Main().Left(rcWnd.left);
-    CConfig::Main().Top(rcWnd.top);
-    // “∆≥˝À˘”–◊”¥∞ø⁄
-    m_pWidget.RemoveAll();
-    // …æ≥˝Õ–≈ÃÕº±Í
-    ::Shell_NotifyIcon(NIM_DELETE, &m_ncd);
-    //  Õ∑≈≤Àµ•◊ ‘¥
-    if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
+    // Âà†Èô§ÊâòÁõòÂõæÊ†á
+    ::Shell_NotifyIcon(NIM_DELETE, &ncd);
+    // ÈáäÊîæËèúÂçïËµÑÊ∫ê
+    if (nullptr != hMenu) ::DestroyMenu(hMenu);
     ::PostQuitMessage(0);
     return S_OK;
 }
@@ -88,30 +69,9 @@ LRESULT CMainFrm::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
     return S_OK;
 }
 
-LRESULT CMainFrm::OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-{
-    bHandled = FALSE;
-    return PostMessage(WM_SYSCOMMAND, SC_MOVE | HTCAPTION);
-}
-
 LRESULT CMainFrm::OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
 {
-    return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);
-}
-
-LRESULT CMainFrm::OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-    TCHAR szPath[MAX_PATH] = { 0 };
-    HDROP hDrop = reinterpret_cast<HDROP>(wParam);
-    UINT uCount = ::DragQueryFile(hDrop, (UINT)-1, NULL, 0);
-    for (UINT iFile = 0; iFile < uCount; iFile++)
-    {
-        if (::DragQueryFile(hDrop, iFile, szPath, _countof(szPath)))
-        {
-            CreaateWidget(szPath);
-        }
-    }
-    return S_OK;
+    return ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, nullptr);
 }
 
 LRESULT CMainFrm::OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
@@ -123,7 +83,7 @@ LRESULT CMainFrm::OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& 
     {
         POINT pt;
         ::GetCursorPos(&pt);
-        return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 0), TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
+        return ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, m_hWnd, nullptr);
     }
     case WM_LBUTTONUP:
         ShowWindow(SW_SHOW);
@@ -136,15 +96,11 @@ LRESULT CMainFrm::OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& 
 
 LRESULT CMainFrm::OnTaskbarCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
-    return ::Shell_NotifyIcon(NIM_ADD, &m_ncd);
+    return ::Shell_NotifyIcon(NIM_ADD, &ncd);
 }
 
 LRESULT CMainFrm::OnWidgetDestroyed(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
 {
-    LPCTSTR szImage = reinterpret_cast<LPCTSTR>(lParam);
-    POSITION nPos = m_pWidget.Find(szImage);
-    if (NULL == nPos) return FALSE;
-    m_pWidget.RemoveAt(nPos);
     return S_OK;
 }
 
@@ -173,45 +129,28 @@ LRESULT CMainFrm::OnOpen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, B
     ofn.nMaxFile = _countof(szImage);
     ofn.lpstrFile = szImage;
     if (!::GetOpenFileName(&ofn)) return FALSE;
-
-    return CreaateWidget(szImage);
+    return S_OK;
 }
 
 LRESULT CMainFrm::OnStayOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-    UINT nCheck = ::GetMenuState(m_hMenu, IDM_TOP, MF_BYCOMMAND) ^ MF_CHECKED;
-    ::CheckMenuItem(m_hMenu, IDM_TOP, nCheck);
+    UINT nCheck = ::GetMenuState(hMenu, IDM_TOP, MF_BYCOMMAND) ^ MF_CHECKED;
+    ::CheckMenuItem(hMenu, IDM_TOP, nCheck);
     CConfig::Main().StayOnTop(nCheck);
-    return SetWindowPos(nCheck ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+    return S_OK;
 }
 
 LRESULT CMainFrm::OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
     ATL::CRegKey hReg;
     hReg.Open(HKEY_CURRENT_USER, _szRegRun, KEY_QUERY_VALUE | KEY_SET_VALUE);
-    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, NULL, NULL, NULL))
+    if (ERROR_SUCCESS == hReg.QueryValue(_szStartup, nullptr, nullptr, nullptr))
     {
         hReg.DeleteValue(_szStartup);
-        return ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_UNCHECKED);
+        return ::CheckMenuItem(hMenu, IDM_STARTUP, MF_UNCHECKED);
     }
     TCHAR szPath[MAX_PATH] = { 0 };
     GetModuleFileName(_Module.get_m_hInst(), szPath, _countof(szPath));
     hReg.SetStringValue(_szStartup, szPath);
-    return ::CheckMenuItem(m_hMenu, IDM_STARTUP, MF_CHECKED);
-}
-
-BOOL CMainFrm::CreaateWidget(LPCTSTR szImage)
-{
-    POSITION nSize = m_pWidget.Find(szImage);
-    if (NULL != nSize)
-    {
-        CAtlString szText;
-        szText.Format(IDS_DUPLICATE, szImage);
-        return MessageBox(szText, CMainFrm::GetWndCaption(), MB_ICONINFORMATION);
-    }
-    nSize = m_pWidget.AddTail(szImage);
-    HWND hWnd = m_pWidget.GetAt(nSize).Create(m_hWnd);
-    if (NULL != hWnd) return ::ShowWindow(hWnd, SW_SHOW);
-    m_pWidget.RemoveAt(nSize);
-    return FALSE;
+    return ::CheckMenuItem(hMenu, IDM_STARTUP, MF_CHECKED);
 }

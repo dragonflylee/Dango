@@ -38,7 +38,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <NuGetPackageImportStamp>1e3982c8</NuGetPackageImportStamp>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
@@ -57,13 +59,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>L2D_TARGET_D3D11;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\include;..\framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\lib\$(PlatformTarget)\$(PlatformToolsetVersion)</AdditionalLibraryDirectories>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*';%(AdditionalManifestDependencies)</AdditionalManifestDependencies>
+      <AdditionalDependencies>live2d_directX_mdd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -74,41 +79,78 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>L2D_TARGET_D3D11;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\include;..\framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\lib\$(PlatformTarget)\$(PlatformToolsetVersion)</AdditionalLibraryDirectories>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*';%(AdditionalManifestDependencies)</AdditionalManifestDependencies>
+      <AdditionalDependencies>live2d_directX_mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\framework\L2DBaseModel.cpp" />
+    <ClCompile Include="..\framework\L2DExpressionMotion.cpp" />
+    <ClCompile Include="..\framework\L2DEyeBlink.cpp" />
+    <ClCompile Include="..\framework\L2DMatrix44.cpp" />
+    <ClCompile Include="..\framework\L2DModelMatrix.cpp" />
+    <ClCompile Include="..\framework\L2DMotionManager.cpp" />
+    <ClCompile Include="..\framework\L2DPhysics.cpp" />
+    <ClCompile Include="..\framework\L2DPose.cpp" />
+    <ClCompile Include="..\framework\L2DTargetPoint.cpp" />
+    <ClCompile Include="..\framework\L2DViewMatrix.cpp" />
+    <ClCompile Include="..\framework\Live2DFramework.cpp" />
     <ClCompile Include="Dango.cpp" />
+    <ClCompile Include="Graphic.cpp" />
+    <ClCompile Include="LAppModel.cpp" />
+    <ClCompile Include="LAppRenderer.cpp" />
+    <ClCompile Include="LAppManager.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="StdAfx.cpp" />
-    <ClCompile Include="WidgetFrm.cpp" />
+    <ClCompile Include="Live2DFrm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Dango.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BtnWnd.h" />
+    <ClInclude Include="..\framework\IPlatformManager.h" />
+    <ClInclude Include="..\framework\L2DBaseModel.h" />
+    <ClInclude Include="..\framework\L2DExpressionMotion.h" />
+    <ClInclude Include="..\framework\L2DEyeBlink.h" />
+    <ClInclude Include="..\framework\L2DMatrix44.h" />
+    <ClInclude Include="..\framework\L2DModelMatrix.h" />
+    <ClInclude Include="..\framework\L2DMotionManager.h" />
+    <ClInclude Include="..\framework\L2DPhysics.h" />
+    <ClInclude Include="..\framework\L2DPose.h" />
+    <ClInclude Include="..\framework\L2DStandardID.h" />
+    <ClInclude Include="..\framework\L2DTargetPoint.h" />
+    <ClInclude Include="..\framework\L2DTextureDesc.h" />
+    <ClInclude Include="..\framework\L2DViewMatrix.h" />
+    <ClInclude Include="..\framework\Live2DFramework.h" />
     <ClInclude Include="Config.h" />
-    <ClInclude Include="Layered.h" />
+    <ClInclude Include="Graphic.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="LAppDefine.h" />
+    <ClInclude Include="LAppModel.h" />
+    <ClInclude Include="LAppRenderer.h" />
+    <ClInclude Include="ModelSetting.h" />
+    <ClInclude Include="ModelSettingJson.h" />
+    <ClInclude Include="LAppManager.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Version.h" />
-    <ClInclude Include="WICImage.h" />
-    <ClInclude Include="WidgetFrm.h" />
+    <ClInclude Include="Live2DFrm.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Dango.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
