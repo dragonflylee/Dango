@@ -1,25 +1,21 @@
-#ifndef _MAIN_FRM_H_
+Ôªø#ifndef _MAIN_FRM_H_
 #define _MAIN_FRM_H_
 
-#include "BtnWnd.h"
 #include "WidgetFrm.h"
 
 #define WM_ICON WM_USER + 180
 
-class CMainFrm : public CWindowImpl<CMainFrm, CWindow, CLayeredTraits>, 
-    public CButtonBase<CMainFrm>
+class CMainFrm : public CWindowImpl<CMainFrm, CWindow, CWinTraits<WS_POPUP> >
 {
 public:
-    DECLARE_WND_CLASS_EX(TEXT("CMainFrm"), CS_DBLCLKS, COLOR_WINDOW + 1)
+    DECLARE_WND_CLASS_EX(TEXT("CMainFrm"), CS_DBLCLKS, COLOR_WINDOW)
 
     BEGIN_MSG_MAP(CMainFrm)
-        CHAIN_MSG_MAP(CButtonBase<CMainFrm>)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContext)
-        MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
         MESSAGE_HANDLER(WM_ICON, OnIcon)
         MESSAGE_HANDLER(CMainFrm::WM_TASKBARCREATED, OnTaskbarCreated)
         MESSAGE_HANDLER(CMainFrm::WM_WIDGETDESTROYED, OnWidgetDestroyed)
@@ -33,19 +29,18 @@ public:
 public:
     static LPCTSTR GetWndCaption() { return TEXT("Dango"); }
     /**
-    * ¥∞ø⁄ ¬º˛œ‡πÿ
+    * Á™óÂè£‰∫ã‰ª∂Áõ∏ÂÖ≥
     */
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnContext(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-    LRESULT OnDropFiles(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnTaskbarCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     LRESULT OnWidgetDestroyed(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
     /**
-    * ”“º¸≤Àµ•œ‡πÿ
+    * Âè≥ÈîÆËèúÂçïÁõ∏ÂÖ≥
     */
     LRESULT OnExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -54,19 +49,18 @@ public:
     LRESULT OnStartup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
-    /* –¬Ω®π“º˛ */
+    /* Êñ∞Âª∫ÊåÇ‰ª∂ */
     BOOL CreaateWidget(LPCTSTR /*szImage*/);
 
 private:
-    HMENU m_hMenu;
-    NOTIFYICONDATA m_ncd;
-    // »ŒŒÒ¿∏÷ÿ∆Ùœ˚œ¢
+    HMENU hMenu;
+    NOTIFYICONDATA ncd;
+    CAtlList<CWidgetFrm> pWidget;
+    // ‰ªªÂä°Ê†èÈáçÂêØÊ∂àÊÅØ
     static UINT WM_TASKBARCREATED;
-
-    CAtlList<CWidgetFrm> m_pWidget;
 public:
-    CMainFrm() : CButtonBase(IDR_MAIN), m_hMenu(NULL) {}
-    // ◊”¥∞ø⁄œ˙ªŸœ˚œ¢
+    CMainFrm() : hMenu(nullptr) {}
+    // Â≠êÁ™óÂè£ÈîÄÊØÅÊ∂àÊÅØ
     static UINT WM_WIDGETDESTROYED;
 };
 

@@ -1,7 +1,7 @@
-#ifndef _STDAFX_H_
+﻿#ifndef _STDAFX_H_
 #define _STDAFX_H_
 
-// ATL ͷ�ļ�:
+// ATL 头文件:
 #include <atlbase.h>
 #include <atlstr.h>
 
@@ -10,7 +10,7 @@ extern CComModule _Module;
 #include <atlwin.h>
 #include <atlcoll.h>
 
-// Windows ͷ�ļ�:
+// Windows 头文件:
 #include <shlobj.h>
 #include <shellapi.h>
 #include <Commdlg.h>

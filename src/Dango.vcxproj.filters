@@ -46,16 +46,10 @@
     <ClInclude Include="Version.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Layered.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="WICImage.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="WidgetFrm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BtnWnd.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">

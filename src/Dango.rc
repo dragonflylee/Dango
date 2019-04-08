@@ -105,7 +105,7 @@ BEGIN
 END
 POPUP "Widget"
 BEGIN
-    MENUITEM "透明度(&T)", IDM_TRANSPARENT
+    MENUITEM "透明度(&T)", IDM_ALPHA
     MENUITEM "移除(&R)", IDM_EXIT
 END
 END
@@ -206,7 +206,7 @@ BEGIN
 END
 POPUP "Widget"
 BEGIN
-    MENUITEM "&Transparent", IDM_TRANSPARENT
+    MENUITEM "&Transparent", IDM_ALPHA
     MENUITEM "R&emove", IDM_EXIT
 END
 END
@@ -216,15 +216,6 @@ END
 // Icon
 //
 IDR_MAIN                ICON                    "res\\Dango.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// RCDATA
-//
-
-IDR_MAIN                RCDATA                  "res\\launch_normal.png"
-IDR_HOVER               RCDATA                  "res\\launch_hover.png"
-IDR_PRESS               RCDATA                  "res\\launch_press.png"
 
 #endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -1,27 +1,24 @@
-#include "StdAfx.h"
+Ôªø#include "StdAfx.h"
 #include "MainFrm.h"
 
-int Run(int nCmdShow)
+int Run(int /*nCmdShow*/)
 {
     CAtlString szText;
     CMainFrm wndMain;
 
     HWND hWnd = wndMain.Create(HWND_DESKTOP);
-    if (NULL == hWnd)
+    if (nullptr == hWnd)
     {
         szText.Format(IDS_ERROR, ::GetLastError());
         return wndMain.MessageBox(szText, CMainFrm::GetWndCaption(), MB_ICONERROR);
     }
-
-    wndMain.ShowWindow(nCmdShow);
-    // ÷˜œ˚œ¢—≠ª∑:
+    // ‰∏ªÊ∂àÊÅØÂæ™ÁéØ:
     MSG msg;
-    while (::GetMessage(&msg, NULL, 0, 0))
+    while (::GetMessage(&msg, nullptr, 0, 0))
     {
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
     }
-
     return (int)msg.wParam;
 }
 
@@ -33,7 +30,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    HANDLE hMutex = ::CreateMutex(NULL, TRUE, TEXT("CDangoHelper"));
+    HANDLE hMutex = ::CreateMutex(nullptr, TRUE, TEXT("CDangoHelper"));
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
     {
         CAtlString szText;
@@ -41,10 +38,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::GetWndCaption(), MB_ICONWARNING);
     }
 
-    HRESULT hr = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    HRESULT hr = ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     ATLASSERT(SUCCEEDED(hr));
 
-    hr = _Module.Init(NULL, hInstance);
+    hr = _Module.Init(nullptr, hInstance);
     ATLASSERT(SUCCEEDED(hr));
 
     int nRet = Run(nCmdShow);

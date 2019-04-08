@@ -1,6 +1,6 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ Éú³ÉµÄ°üº¬ÎÄ¼ş¡£
-// ¹© Dango.rc Ê¹ÓÃ
+ï»¿//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ ç”Ÿæˆçš„åŒ…å«æ–‡ä»¶ã€‚
+// ä¾› Dango.rc ä½¿ç”¨
 //
 #define IDR_MAIN                   101
 #define IDR_HOVER                  102
@@ -16,7 +16,7 @@
 #define IDM_TOP                    4003
 #define IDM_OPEN                   4004
 #define IDM_STARTUP                4005
-#define IDM_TRANSPARENT            4006
+#define IDM_ALPHA                  4006
 #ifndef IDC_STATIC
 #define IDC_STATIC                  -1
 #endif
