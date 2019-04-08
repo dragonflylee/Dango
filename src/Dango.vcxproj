@@ -96,7 +96,6 @@
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="Frame.h" />
-    <ClInclude Include="Layered.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />

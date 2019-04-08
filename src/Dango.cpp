@@ -4,10 +4,9 @@
 int Run(HINSTANCE hInst, int nCmdShow)
 {
     TCHAR szText[MAX_PATH];
-    
     CMainFrm wndMain;
     HWND hWnd = wndMain.Create(hInst, HWND_DESKTOP);
-    if (NULL == hWnd)
+    if (nullptr == hWnd)
     {
         TCHAR szFormat[MAX_PATH];
         DWORD dwError = ::GetLastError();
@@ -16,9 +15,10 @@ int Run(HINSTANCE hInst, int nCmdShow)
         return wndMain.MessageBox(szText, MB_ICONERROR);
     }
     ::ShowWindow(hWnd, nCmdShow);
+    ::UpdateWindow(hWnd);
     // 主消息循环:
     MSG msg;
-    while (::GetMessage(&msg, NULL, 0, 0))
+    while (::GetMessage(&msg, nullptr, 0, 0))
     {
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
@@ -36,7 +36,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     
     ::LoadString(hInstance, IDR_MAIN, CMainFrm::szTitle, _countof(CMainFrm::szTitle));
 
-    HANDLE hMutex = ::CreateMutex(NULL, TRUE, TEXT("CDangoHelper"));
+    HANDLE hMutex = ::CreateMutex(nullptr, TRUE, TEXT("CDangoHelper"));
     if (::GetLastError() == ERROR_ALREADY_EXISTS)
     {
         TCHAR szText[MAX_PATH];
@@ -44,7 +44,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return ::MessageBox(HWND_DESKTOP, szText, CMainFrm::GetWndCaption(), MB_ICONWARNING);
     }
     
-    ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
    
     int nRet = Run(hInstance, nCmdShow);
 

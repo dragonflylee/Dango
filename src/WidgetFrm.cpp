@@ -1,67 +1,115 @@
-#include "StdAfx.h"
+Ôªø#include "StdAfx.h"
 #include "WidgetFrm.h"
 #include "MainFrm.h"
 
-/* Õ∏√˜∂»≤Àµ•∂®“Â */
-static const UINT _nStartAlpha = IDM_TRANSPARENT + 1000;
-static const UINT _nEndAlpha = _nStartAlpha + 0xFF;
+/* ÈÄèÊòéÂ∫¶ËèúÂçïÂÆö‰πâ */
+#define WM_ALPHA (WM_USER + IDM_ALPHA)
 
-CWidgetFrm::CWidgetFrm(LPCTSTR szPath) :
-m_hMenu(NULL),
-m_uTimer(1),
-m_layered((BYTE)CConfig::Widget(szPath).Alpha())
+ID2D1Factory * CWidgetFrm::pD2DFactory = nullptr;
+
+const D2D1_RENDER_TARGET_PROPERTIES rtProp = D2D1::RenderTargetProperties(
+    D2D1_RENDER_TARGET_TYPE_DEFAULT,
+    D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+    0.0f, // default dpi
+    0.0f, // default dpi
+    D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
+
+CWidgetFrm::CWidgetFrm(CWidgetFrm *pPrev, LPCTSTR szFile) :
+hMenu(nullptr), uTimer(1), pNext(pPrev)
 {
-    _tcscpy_s(m_szPath, _countof(m_szPath), szPath);
+    if (nullptr == pD2DFactory)
+        ::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+    else
+        pD2DFactory->AddRef();
+
+    uAlpha = (BYTE)CConfig::Widget(szFile).Alpha();
+    _tcscpy_s(szPath, _countof(szPath), szFile);
 }
 
-LRESULT CWidgetFrm::OnCreate()
+CWidgetFrm::~CWidgetFrm()
+{
+    if (0 == pD2DFactory->Release()) pD2DFactory = nullptr;
+    if (pNext) delete pNext;
+}
+
+LRESULT CWidgetFrm::OnCreate(LPCREATESTRUCT pParam)
 {
     HRESULT hr = S_OK;
     TCHAR szMenu[MAX_PATH] = { 0 };
-    MENUITEMINFO info = { sizeof(MENUITEMINFO) };
-    // º”‘ÿ≤Àµ•
-    m_hMenu = ::LoadMenu(m_hInst, MAKEINTRESOURCE(IDR_MAIN));
-    BOOL_CHECK(m_hMenu);
-    // …˙≥…Õ∏√˜∂»≤Àµ•
-    info.fMask = MIIM_SUBMENU;
-    info.hSubMenu = ::CreateMenu();
-    for (UINT uAlpha = _nStartAlpha + 0x20; uAlpha < _nEndAlpha; uAlpha += 0x20)
+    MENUITEMINFO mi = { sizeof(MENUITEMINFO) };
+    // Âä†ËΩΩËèúÂçï
+    hMenu = ::GetSubMenu(::LoadMenu(pParam->hInstance, MAKEINTRESOURCE(IDR_MAIN)), 1);
+    BOOL_CHECK(hMenu);
+    // ÁîüÊàêÈÄèÊòéÂ∫¶ËèúÂçï
+    mi.fMask = MIIM_SUBMENU;
+    mi.hSubMenu = ::CreateMenu();
+    for (WORD i = 21; i < 256; i += 26)
     {
-        _stprintf_s(szMenu, TEXT("%d%%"), 100 * (_nEndAlpha - uAlpha) / 0x100);
-        ::InsertMenu(info.hSubMenu, 0, MF_BYCOMMAND, uAlpha, szMenu);
+        _stprintf_s(szMenu, TEXT("%d%%"), 100 * (i + 5) / 260);
+        ::InsertMenu(mi.hSubMenu, 0, i == uAlpha ? MF_CHECKED | MF_USECHECKBITMAPS : MF_UNCHECKED, WM_ALPHA + i, szMenu);
     }
-    ::SetMenuItemInfo(m_hMenu, IDM_TRANSPARENT, FALSE, &info);
-    ::CheckMenuRadioItem(m_hMenu, _nStartAlpha, _nEndAlpha, _nStartAlpha + m_layered.GetAlpha(), MF_BYCOMMAND);
-    // º”‘ÿÕºœÒ
-    HR_CHECK(m_image.Load(m_szPath));
-    BOOL_CHECK(::SetWindowPos(m_hWnd, NULL, CConfig::Widget(m_szPath).Left(), CConfig::Widget(m_szPath).Top(), 0, 0, SWP_NOSIZE | SWP_NOZORDER));
+    ::SetMenuItemInfo(hMenu, IDM_ALPHA, FALSE, &mi);
+    // Âä†ËΩΩÂõæÂÉè
+    HR_CHECK(wImage.Load(szPath));
+
+    BOOL_CHECK(::SetWindowPos(hWnd, nullptr, CConfig::Widget(szPath).Left(), CConfig::Widget(szPath).Top(), 0, 0, SWP_NOSIZE | SWP_NOZORDER));
 exit:
-    // ∑µªÿ -1 ±Ì æ¥∞ø⁄¥¥Ω® ß∞‹
+    // ËøîÂõû -1 Ë°®Á§∫Á™óÂè£ÂàõÂª∫Â§±Ë¥•
     return SUCCEEDED(hr) ? 0 : -1;
 }
 
 LRESULT CWidgetFrm::OnDestroy()
 {
     RECT rcWnd;
-    ::GetWindowRect(m_hWnd, &rcWnd);
-    CConfig::Widget(m_szPath).Left(rcWnd.left);
-    CConfig::Widget(m_szPath).Top(rcWnd.top);
+    ::GetWindowRect(hWnd, &rcWnd);
+    CConfig::Widget(szPath).Left(rcWnd.left);
+    CConfig::Widget(szPath).Top(rcWnd.top);
 
-    // …æ≥˝∂® ±∆˜
-    ::KillTimer(m_hWnd, m_uTimer);
+    // Âà†Èô§ÂÆöÊó∂Âô®
+    ::KillTimer(hWnd, uTimer);
 
-    //  Õ∑≈≤Àµ•◊ ‘¥
-    if (NULL != m_hMenu) ::DestroyMenu(m_hMenu);
+    // ÈáäÊîæËèúÂçïËµÑÊ∫ê
+    if (nullptr != hMenu) ::DestroyMenu(hMenu);
 
-    return ::PostMessage(::GetParent(m_hWnd), CMainFrm::WM_WIDGETDESTROYED, 0, reinterpret_cast<LPARAM>(this));
+    return ::PostMessage(::GetParent(hWnd), CMainFrm::WM_WIDGETDESTROYED, 0, reinterpret_cast<LPARAM>(this));
 }
 
 LRESULT CWidgetFrm::OnRender()
 {
-    m_layered.UpdateLayered(m_hWnd, CRenderTarget(m_image));
-    if (m_image.GetFrameCount() <= 1) return S_OK;
-    m_uTimer = ::SetTimer(m_hWnd, m_uTimer, m_image.GetFrameDelay(), NULL);
-    return m_image.NextFrame();
+    ID2D1RenderTarget *pTarget = nullptr;
+    ID2D1GdiInteropRenderTarget *pGdiTarget = nullptr;
+    BLENDFUNCTION blend = { AC_SRC_OVER, 0, uAlpha, AC_SRC_ALPHA };
+    POINT pt = { 0, 0 };
+    HDC hDC = nullptr;
+    HRESULT hr = S_OK;
+
+    HR_CHECK(pD2DFactory->CreateWicBitmapRenderTarget(wImage, &rtProp, &pTarget));
+
+    // ËÆæÁΩÆÁªòÂõæÂ§ßÂ∞è
+    SIZE sz;
+    D2D1_SIZE_U size;
+    size = pTarget->GetPixelSize();
+    sz.cx = size.width;
+    sz.cy = size.height;
+
+    pTarget->BeginDraw();
+
+    HR_CHECK(pTarget->QueryInterface(IID_PPV_ARGS(&pGdiTarget)));
+    // Ëé∑ÂèñDC
+    HR_CHECK(pGdiTarget->GetDC(D2D1_DC_INITIALIZE_MODE_COPY, &hDC));
+    // ÁªòÂà∂Á™ó‰Ωì
+    BOOL_CHECK(::UpdateLayeredWindow(hWnd, nullptr, nullptr, &sz, hDC, &pt, 0, &blend, ULW_ALPHA));
+
+    HR_CHECK(pGdiTarget->ReleaseDC(nullptr));
+    HR_CHECK(pTarget->EndDraw());
+ 
+    if (wImage.GetFrameCount() > 1)
+        uTimer = ::SetTimer(hWnd, uTimer, wImage.GetFrameDelay(), nullptr);
+    HR_CHECK(wImage.NextFrame());
+exit:
+    SafeRelease(pTarget);
+    SafeRelease(pGdiTarget);
+    return hr;
 }
 
 LRESULT CWidgetFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -71,42 +119,38 @@ LRESULT CWidgetFrm::DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     case WM_COMMAND:
         if (IDM_EXIT == LOWORD(wParam))
         {
-            CConfig::Widget(m_szPath).Show(FALSE);
+            CConfig::Widget(szPath).Show(FALSE);
             return ::PostMessage(hWnd, WM_CLOSE, 0, 0L);
         }
-        if (::CheckMenuRadioItem(m_hMenu, _nStartAlpha, _nEndAlpha, (UINT)wParam, MF_BYCOMMAND))
+        if (::CheckMenuRadioItem(hMenu, WM_ALPHA, WM_ALPHA + 0xFF, (UINT)wParam, MF_BYCOMMAND))
         {
-            wParam -= _nStartAlpha;
-            CConfig::Widget(m_szPath).Alpha((int)wParam);
-            return m_layered.SetAlpha(m_hWnd, (BYTE)(wParam));
+            BLENDFUNCTION blend = { AC_SRC_OVER, 0, (BYTE)(wParam - WM_ALPHA), AC_SRC_ALPHA };
+            CConfig::Widget(szPath).Alpha(uAlpha = blend.SourceConstantAlpha);
+            return ::UpdateLayeredWindow(hWnd, nullptr, nullptr, nullptr, nullptr, nullptr, 0, &blend, ULW_ALPHA);
         }
     case WM_LBUTTONDOWN:
-        //  Û±Íµ„ª˜Õœ∂Ø¥∞ø⁄
+        // Èº†Ê†áÁÇπÂáªÊãñÂä®Á™óÂè£
         ::PostMessage(hWnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
         break;
     case WM_CONTEXTMENU:
-        // ”“º¸≤Àµ•
-        return ::TrackPopupMenu(::GetSubMenu(m_hMenu, 1), TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, m_hWnd, NULL);
+        // Âè≥ÈîÆËèúÂçï
+        return ::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hWnd, nullptr);
     case WM_SHOWWINDOW:
         if (TRUE == wParam)
         {
-            CConfig::Widget(m_szPath).Show(TRUE);
+            CConfig::Widget(szPath).Show(TRUE);
             return OnRender();
         }
-        ::KillTimer(hWnd, m_uTimer);
+        ::KillTimer(hWnd, uTimer);
         break;
     case WM_TIMER:
-        if (wParam == m_uTimer)
+        if (wParam == uTimer)
         {
             return OnRender();
         }
         break;
     case WM_DISPLAYCHANGE:
-    {
-        RECT rcWnd;
-        ::GetWindowRect(m_hWnd, &rcWnd);
-        return m_layered.SetPosition(m_hWnd, (LPPOINT)&rcWnd);
-    }
+        break;
     case WM_DESTROY:
         return OnDestroy();
     }

@@ -1,20 +1,20 @@
-#ifndef _WIC_IMAGE_H_
+ï»¿#ifndef _WIC_IMAGE_H_
 #define _WIC_IMAGE_H_
 
 /*
 /**
-* CWICImage ·â×°Àà
+* CWICImage å°è£…ç±»
 */
 class CWICImage
 {
 public:
     /**
-    * ´Ó×ÊÔ´ÖÐ¼ÓÔØÍ¼Ïñ
+    * ä»Žèµ„æºä¸­åŠ è½½å›¾åƒ
     */
     HRESULT Load(HMODULE hModule, LPCTSTR szName, LPCTSTR szType)
     {
-        IStream *pStream = NULL;
-        HGLOBAL hRes = NULL;
+        IWICStream *pStream = nullptr;
+        HGLOBAL hRes = nullptr;
         HRESULT hr = S_OK;
 
         HRSRC hSrc = ::FindResource(hModule, szName, szType);
@@ -25,151 +25,141 @@ public:
 
         DWORD cbSize = SizeofResource(hModule, hSrc);
         LPBYTE pData = (LPBYTE)::LockResource(hRes);
-        pStream = ::SHCreateMemStream(pData, cbSize);
-        BOOL_CHECK(pStream);
+
+        HR_CHECK(pWICFactory->CreateStream(&pStream));
+
+        HR_CHECK(pStream->InitializeFromMemory(pData, cbSize));
 
         Clear();
 
-        hr = m_pIWICFactory->CreateDecoderFromStream(pStream, NULL, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
-        HR_CHECK(hr);
+        HR_CHECK(pWICFactory->CreateDecoderFromStream(pStream, nullptr, WICDecodeMetadataCacheOnLoad, &pDecoder));
 
-        // ¶ÁÈ¡Ö¡Êý
-        hr = m_pDecoder->GetFrameCount(&m_uFrames);
-        HR_CHECK(hr);
+        // è¯»å–å¸§æ•°
+        HR_CHECK(pDecoder->GetFrameCount(&uFrames));
 
-        // ¶ÁÈ¡µÚÒ»Ö¡
+        // è¯»å–ç¬¬ä¸€å¸§
         hr = NextFrame();
     exit:
-        if (NULL != hRes) ::FreeResource(hRes);
-        SAFE_RELEASE(pStream);
+        if (nullptr != hRes) ::FreeResource(hRes);
+        SafeRelease(pStream);
         return hr;
     }
 
     /**
-    * ´ÓÎÄ¼þÖÐ¼ÓÔØÍ¼Ïñ
+    * ä»Žæ–‡ä»¶ä¸­åŠ è½½å›¾åƒ
     */
     HRESULT Load(LPCWSTR wzFilename)
     {
+        HRESULT hr = S_OK;
+
         Clear();
 
-        HRESULT hr = m_pIWICFactory->CreateDecoderFromFilename(wzFilename, NULL,
-            GENERIC_READ, WICDecodeMetadataCacheOnLoad, &m_pDecoder);
-        HR_CHECK(hr);
+        HR_CHECK(pWICFactory->CreateDecoderFromFilename(wzFilename, nullptr,
+            GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
 
-        // ¶ÁÈ¡Ö¡Êý
-        hr = m_pDecoder->GetFrameCount(&m_uFrames);
-        HR_CHECK(hr);
+        // è¯»å–å¸§æ•°
+        HR_CHECK(pDecoder->GetFrameCount(&uFrames));
 
-        // ¶ÁÈ¡µÚÒ»Ö¡
+        // è¯»å–ç¬¬ä¸€å¸§
         hr = NextFrame();
     exit:
         return hr;
     }
 
     /**
-    * Çå³ýÒÑ¼ÓÔØµÄÍ¼Ïñ
+    * æ¸…é™¤å·²åŠ è½½çš„å›¾åƒ
     */
     void Clear()
     {
-        m_uFrames = 0;
-        m_uNextFrame = 0;
-        m_uFrameDelay = 0;
-        SAFE_RELEASE(m_pBitmap);
-        SAFE_RELEASE(m_pDecoder);
+        uFrames = 0;
+        uNextFrame = 0;
+        uFrameDelay = 0;
+        SafeRelease(pBitmap);
+        SafeRelease(pDecoder);
     }
 
     /**
-    * »ñÈ¡µ±Ç°Ö¡Í¼Ïñ
+    * èŽ·å–å½“å‰å¸§å›¾åƒ
     */
-    inline operator IWICBitmap *() const { return m_pBitmap; }
+    inline operator IWICBitmap *() const { return pBitmap; }
     /**
-    * »ñÈ¡×ÜÖ¡Êý
+    * èŽ·å–æ€»å¸§æ•°
     */
-    inline UINT GetFrameCount() const { return m_uFrames; }
+    inline UINT GetFrameCount() const { return uFrames; }
     /**
-    * »ñÈ¡Ö¡ÑÓÊ±
+    * èŽ·å–å¸§å»¶æ—¶
     */
-    inline UINT GetFrameDelay() const { return m_uFrameDelay; }
+    inline UINT GetFrameDelay() const { return uFrameDelay; }
 
     /**
-    * ÒÆ¶¯µ½ÏÂÒ»Ö¡
+    * ç§»åŠ¨åˆ°ä¸‹ä¸€å¸§
     */
     HRESULT NextFrame()
     {
         HRESULT hr = S_OK;
-        IWICBitmapFrameDecode *pWicFrame = NULL;
-        IWICFormatConverter *pConverter = NULL;
-        IWICMetadataQueryReader *pMetaQuery = NULL;
+        IWICBitmapFrameDecode *pWicFrame = nullptr;
+        IWICFormatConverter *pConverter = nullptr;
+        IWICMetadataQueryReader *pMetaQuery = nullptr;
 
-        hr = m_pDecoder->GetFrame(m_uNextFrame, &pWicFrame);
-        HR_CHECK(hr);
+        HR_CHECK(pDecoder->GetFrame(uNextFrame, &pWicFrame));
 
-        hr = m_pIWICFactory->CreateFormatConverter(&pConverter);
-        HR_CHECK(hr);
+        HR_CHECK(pWICFactory->CreateFormatConverter(&pConverter));
 
-        hr = pConverter->Initialize(pWicFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom);
-        HR_CHECK(hr);
+        HR_CHECK(pConverter->Initialize(pWicFrame, GUID_WICPixelFormat32bppPBGRA,
+            WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom));
 
-        SAFE_RELEASE(m_pBitmap);
-        hr = m_pIWICFactory->CreateBitmapFromSource(pConverter, WICBitmapCacheOnLoad, &m_pBitmap);
-        HR_CHECK(hr);
+        SafeRelease(pBitmap);
+        HR_CHECK(pWICFactory->CreateBitmapFromSource(pConverter, WICBitmapCacheOnLoad, &pBitmap));
 
-        if (m_uFrames > 1)
+        if (uFrames > 1 && SUCCEEDED(pWicFrame->GetMetadataQueryReader(&pMetaQuery)) && nullptr != pMetaQuery)
         {
-            hr = pWicFrame->GetMetadataQueryReader(&pMetaQuery);
-            if (SUCCEEDED(hr) && NULL != pMetaQuery)
+            PROPVARIANT propValue;
+            ::PropVariantInit(&propValue);
+            // èŽ·å–å›¾åƒå¸§çŽ‡
+            hr = pMetaQuery->GetMetadataByName(L"/grctlext/Delay", &propValue);
+            if (SUCCEEDED(hr) && propValue.vt == VT_UI2)
             {
-                PROPVARIANT propValue;
-                ::PropVariantInit(&propValue);
+                // Convert the delay retrieved in 10 ms units to a delay in 1 ms units
+                hr = ::UIntMult(propValue.uiVal, 10, &uFrameDelay);
+                ::PropVariantClear(&propValue);
 
-                // »ñÈ¡Í¼ÏñÖ¡ÂÊ
-                hr = pMetaQuery->GetMetadataByName(L"/grctlext/Delay", &propValue);
-                if (SUCCEEDED(hr) && propValue.vt == VT_UI2)
-                {
-                    // Convert the delay retrieved in 10 ms units to a delay in 1 ms units
-                    hr = ::UIntMult(propValue.uiVal, 10, &m_uFrameDelay);
-                    ::PropVariantClear(&propValue);
-
-                    if (SUCCEEDED(hr) && m_uFrameDelay < 90) m_uFrameDelay = 90;
-                    m_uNextFrame = (++m_uNextFrame) % m_uFrames;
-                }
+                if (SUCCEEDED(hr) && uFrameDelay < 90) uFrameDelay = 90;
+                uNextFrame = (++uNextFrame) % uFrames;
             }
         }
     exit:
-        SAFE_RELEASE(pWicFrame);
-        SAFE_RELEASE(pConverter);
-        SAFE_RELEASE(pMetaQuery);
+        SafeRelease(pWicFrame);
+        SafeRelease(pConverter);
+        SafeRelease(pMetaQuery);
         return hr;
     }
 
 private:
-    UINT m_uFrames;
-    IWICBitmapDecoder *m_pDecoder;
-    static IWICImagingFactory *m_pIWICFactory;
-    // µ±Ç°Ö¡×´Ì¬
-    SIZE m_size;
-    UINT m_uNextFrame;
-    UINT m_uFrameDelay;
-    IWICBitmap *m_pBitmap;
+    UINT uFrames;
+    IWICBitmapDecoder *pDecoder;
+    static IWICImagingFactory *pWICFactory;
+    UINT uNextFrame;
+    UINT uFrameDelay;
+    IWICBitmap *pBitmap;
 
 private:
     CWICImage&operator=(const CWICImage&);
     CWICImage(const CWICImage&);
 
 public:
-    CWICImage() : m_uFrames(0), m_pDecoder(NULL), m_uNextFrame(0), m_uFrameDelay(0), m_pBitmap(NULL)
+    CWICImage() : uFrames(0), pDecoder(nullptr), uNextFrame(0), uFrameDelay(0), pBitmap(nullptr)
     {
-        if (NULL == m_pIWICFactory) ::CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_pIWICFactory));
-        m_pIWICFactory->AddRef();
+        if (nullptr == pWICFactory) ::CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pWICFactory));
+        pWICFactory->AddRef();
     }
 
     ~CWICImage()
     {
         Clear();
-        if (m_pIWICFactory->Release() == 0) m_pIWICFactory = NULL;
+        if (pWICFactory->Release() == 0) pWICFactory = nullptr;
     }
 };
 
-__declspec(selectany) IWICImagingFactory * CWICImage::m_pIWICFactory = NULL;
+__declspec(selectany) IWICImagingFactory * CWICImage::pWICFactory = nullptr;
 
 #endif // _WIC_IMAGE_H_

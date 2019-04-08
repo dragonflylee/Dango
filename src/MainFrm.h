@@ -1,57 +1,56 @@
-#ifndef _MAIN_FRM_H_
+ï»¿#ifndef _MAIN_FRM_H_
 #define _MAIN_FRM_H_
 
 #include "Frame.h"
-#include "Layered.h"
 
 class CWidgetFrm;
 
-class CMainFrm : public CFrameWnd<CMainFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW>, CLayeredInfo
+class CMainFrm : public CFrameWnd<CMainFrm, WS_POPUP, WS_EX_TOOLWINDOW>
 {
 public:
     DECLARE_WND_CLASS_EX(TEXT("CDangoFrm"), 0, COLOR_WINDOW);
 
     static LPCTSTR GetWndCaption() { return szTitle; }
     /**
-    * ÏûÏ¢´¦Àí
+    * æ¶ˆæ¯å¤„ç†
     */
-    LRESULT OnCreate();
+    LRESULT OnCreate(LPCREATESTRUCT /*pParam*/);
     /**
-    * ´°ÌåÏûÏ¢Ñ­»·
+    * çª—ä½“æ¶ˆæ¯å¾ªç¯
     */
     LRESULT DefWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
     /**
-    * ¹ØÓÚ¶Ô»°¿ò
+    * å…³äºå¯¹è¯æ¡†
     */
     static INT_PTR CALLBACK AboutDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     /**
-    * ÏûÏ¢´¦Àí
+    * æ¶ˆæ¯å¤„ç†
     */
     LRESULT OnDestroy();
-    LRESULT OnDropFiles(HDROP hDrop);
     /**
-    * ÓÒ¼ü²Ëµ¥ÊÂ¼ş
+    * å³é”®èœå•äº‹ä»¶
     */
     LRESULT OnStayOnTop();
     LRESULT OnOpenImage();
     LRESULT OnStartUp(BOOL bSet);
     /**
-    * ´´½¨¹Ò¼ş
+    * åˆ›å»ºæŒ‚ä»¶
     */
     BOOL CreaateWidget(LPCTSTR /*szImage*/);
 
 private:
-    HMENU m_hMenu;
-    CLayeredInfo m_layered;
-    NOTIFYICONDATA m_ncd;
-    // ÈÎÎñÀ¸ÖØÆôÏûÏ¢
+    HMENU hMenu;
+    HINSTANCE hInst;
+    NOTIFYICONDATA ncd;
+    CWidgetFrm *pWidget;
+    // ä»»åŠ¡æ é‡å¯æ¶ˆæ¯
     static UINT WM_TASKBARCREATED;
 
 public:
-    CMainFrm() : m_hMenu(NULL) {}
-    // ×Ó´°¿ÚÏú»ÙÏûÏ¢
+    CMainFrm() : hMenu(nullptr), hInst(nullptr), pWidget(nullptr) {}
+    // å­çª—å£é”€æ¯æ¶ˆæ¯
     static UINT WM_WIDGETDESTROYED;
     static TCHAR szTitle[MAX_PATH];
 };

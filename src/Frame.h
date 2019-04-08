@@ -5,7 +5,7 @@
 static WNDCLASSEX& GetWndClassInfo() \
 { \
 	static WNDCLASSEX wc = { sizeof(WNDCLASSEX), style, CFrameWnd::StartWindowProc, \
-		  0, 0, NULL, NULL, NULL, (HBRUSH)(bkgnd + 1), NULL, WndClassName, NULL }; \
+		  0, 0, nullptr, nullptr, nullptr, (HBRUSH)(bkgnd + 1), nullptr, WndClassName, nullptr }; \
 	return wc; \
 }
 
@@ -16,44 +16,34 @@ template <class T, DWORD dwStyle = WS_OVERLAPPEDWINDOW, DWORD dwStyleEx = WS_EX_
 class CFrameWnd
 {
 public:
-    DECLARE_WND_CLASS_EX(NULL, 0, COLOR_WINDOW + 1);
+    DECLARE_WND_CLASS_EX(TEXT("DangoWnd"), 0, COLOR_WINDOW);
 
-    CFrameWnd() : m_hWnd(NULL), m_hInst(NULL) {}
+    CFrameWnd() : hWnd(nullptr) {}
 
     virtual ~CFrameWnd() {}
 
     /**
     * 获取窗体标题
     */
-    static LPCTSTR GetWndCaption() { return NULL; }
+    static LPCTSTR GetWndCaption() { return nullptr; }
 
     /**
     * 创建窗体
     */
     HWND Create(HINSTANCE hInst, HWND hParent = HWND_DESKTOP)
     {
-        TCHAR szAutoName[CHAR_BIT * 2];
-        m_hInst = hInst;
-
         // 注册窗口类
         WNDCLASSEX& wc = T::GetWndClassInfo();
-        if (NULL == wc.lpszClassName)
-        {
-            // 自动生成窗口类名
-            _stprintf_s(szAutoName, _countof(szAutoName), TEXT("CDango:%p"), &wc);
-            wc.lpszClassName = szAutoName;
-        }
-
         if (!::GetClassInfoEx(hInst, wc.lpszClassName, &wc))
         {
             wc.hInstance = hInst;
             wc.hIcon = ::LoadIcon(hInst, MAKEINTRESOURCE(nID));
-            wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
-            if (!::RegisterClassEx(&wc)) return NULL;
+            wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+            if (!::RegisterClassEx(&wc)) return nullptr;
         }
 
         return ::CreateWindowEx(dwStyleEx, wc.lpszClassName, T::GetWndCaption(), dwStyle,
-            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hParent, NULL, hInst, static_cast<T*>(this));
+            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hParent, nullptr, hInst, static_cast<T*>(this));
     }
 
     /**
@@ -61,14 +51,14 @@ public:
     */
     int MessageBox(LPCTSTR lpText, UINT uType)
     {
-        return ::MessageBox(m_hWnd, lpText, T::GetWndCaption(), uType);
+        return ::MessageBox(hWnd, lpText, T::GetWndCaption(), uType);
     }
 
 protected:
     /**
     * 窗体创建事件
     */
-    LRESULT OnCreate() { return S_OK; }
+    LRESULT OnCreate(LPCREATESTRUCT /*pParam*/) { return S_OK; }
 
     /**
     * 窗体消息循环
@@ -85,19 +75,19 @@ protected:
     {
         if (WM_CREATE == uMsg)
         {
-            T *pT = (T *)((LPCREATESTRUCT)lParam)->lpCreateParams;
-            pT->m_hWnd = hWnd;
-            ::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pT);
-            return pT->OnCreate();
+            LPCREATESTRUCT pParam = reinterpret_cast<LPCREATESTRUCT>(lParam);
+            T *pT = reinterpret_cast<T *>(pParam->lpCreateParams);
+            ::SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pT));
+            pT->hWnd = hWnd;
+            return pT->OnCreate(pParam);
         }
-        T *pT = (T *)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
-        if (NULL == pT) return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+        T *pT = reinterpret_cast<T *>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        if (nullptr == pT) return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
         return pT->DefWindowProc(hWnd, uMsg, wParam, lParam);
     }
 
 protected:
-    HWND m_hWnd;
-    HINSTANCE m_hInst;
+    HWND hWnd;
 };
 
 #endif // _FRAME_WND_H_

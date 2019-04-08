@@ -1,4 +1,4 @@
-#ifndef _CONFIG_INI_H_
+Ôªø#ifndef _CONFIG_INI_H_
 #define _CONFIG_INI_H_
 
 #define DEF_INI_ITEM(name, type, value) \
@@ -16,8 +16,6 @@ class CConfig
 {
 public:
     BEGIN_INI_SECTION(Main)
-        DEF_INI_ITEM(Left, int, 100)
-        DEF_INI_ITEM(Top, int, 100)
         DEF_INI_ITEM(StayOnTop, int, 0)
     END_INI_SECTION()
 
@@ -28,20 +26,20 @@ public:
         DEF_INI_ITEM(Alpha, int, 0xFF)
     END_INI_SECTION()
     /**
-     * ≥ı ºªØ≈‰÷√¿‡
+     * ÂàùÂßãÂåñÈÖçÁΩÆÁ±ª
      */
     static HRESULT Init(LPTSTR &hName)
     {
         HRESULT hr = S_OK;
         DWORD uAlloc = MAX_PATH;
-        // ¥”ªÒ≈‰÷√Œƒº˛±£¥Ê¬∑æ∂
-        BOOL_CHECK(::SHGetSpecialFolderPath(HWND_DESKTOP, m_szPath, CSIDL_APPDATA, TRUE));
-        BOOL_CHECK(::PathCombine(m_szPath, m_szPath, TEXT("Dango.ini")));
+        // ‰ªéËé∑ÈÖçÁΩÆÊñá‰ª∂‰øùÂ≠òË∑ØÂæÑ
+        BOOL_CHECK(::SHGetSpecialFolderPath(HWND_DESKTOP, szPath, CSIDL_APPDATA, TRUE));
+        BOOL_CHECK(::PathCombine(szPath, szPath, TEXT("Dango.ini")));
 
         hName = (LPTSTR)::LocalAlloc(LPTR, uAlloc * sizeof(TCHAR));
         BOOL_CHECK(hName);
-        // ªÒ»°ÕºœÒΩ⁄µ„
-        while (::GetPrivateProfileSectionNames(hName, uAlloc, m_szPath) == uAlloc - 2)
+        // Ëé∑ÂèñÂõæÂÉèËäÇÁÇπ
+        while (::GetPrivateProfileSectionNames(hName, uAlloc, szPath) == uAlloc - 2)
         {
             uAlloc *= 2;
             hName = (LPTSTR)::LocalReAlloc(hName, uAlloc * sizeof(TCHAR), LMEM_MOVEABLE | LMEM_ZEROINIT);
@@ -53,18 +51,18 @@ public:
 private:
     static int GetValue(LPCTSTR szApp, LPCTSTR szName, int nDefault)
     {
-        return ::GetPrivateProfileInt(szApp, szName, nDefault, m_szPath);
+        return ::GetPrivateProfileInt(szApp, szName, nDefault, szPath);
     }
     static BOOL SetValue(LPCTSTR szApp, LPCTSTR szName, int nValue)
     {
         TCHAR szValue[MAXCHAR] = { 0 };
         _stprintf_s(szValue, TEXT("%d"), nValue);
-        return ::WritePrivateProfileString(szApp, szName, szValue, m_szPath);
+        return ::WritePrivateProfileString(szApp, szName, szValue, szPath);
     }
 private:
-    static TCHAR m_szPath[MAX_PATH];
+    static TCHAR szPath[MAX_PATH];
 };
 
-__declspec(selectany) TCHAR CConfig::m_szPath[MAX_PATH] = { 0 };
+__declspec(selectany) TCHAR CConfig::szPath[MAX_PATH] = { 0 };
 
 #endif // _CONFIG_INI_H_

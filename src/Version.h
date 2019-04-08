@@ -1,4 +1,4 @@
-// �汾�ſ����ļ�
+﻿// 版本号控制文件
 
 #ifndef _VERSION_H_
 #define _VERSION_H_

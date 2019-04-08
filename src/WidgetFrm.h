@@ -1,8 +1,7 @@
-#ifndef _WIDGET_FRM_H_
+ï»¿#ifndef _WIDGET_FRM_H_
 #define _WIDGET_FRM_H_
 
 #include "Frame.h"
-#include "Layered.h"
 #include "WICImage.h"
 
 class CWidgetFrm : public CFrameWnd<CWidgetFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_TOOLWINDOW>
@@ -10,34 +9,37 @@ class CWidgetFrm : public CFrameWnd<CWidgetFrm, WS_POPUP, WS_EX_LAYERED | WS_EX_
 public:
     DECLARE_WND_CLASS_EX(TEXT("CDangoWidget"), 0, COLOR_WINDOW);
     /**
-    * ÏûÏ¢´¦Àí
+    * æ¶ˆæ¯å¤„ç†
     */
-    LRESULT OnCreate();
+    LRESULT OnCreate(LPCREATESTRUCT /*pParam*/);
     LRESULT OnDestroy();
     /**
-    * ´°ÌåÏûÏ¢Ñ­»·
+    * çª—ä½“æ¶ˆæ¯å¾ªçŽ¯
     */
     LRESULT DefWindowProc(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/);
 
 private:
     /**
-    * ´°Ìå¸üÐÂ
+    * çª—ä½“æ›´æ–°
     */
     LRESULT OnRender();
 
 private:
-    HMENU m_hMenu;
-    UINT_PTR m_uTimer;
-    CLayeredInfo m_layered;
-    CWICImage m_image;
-    TCHAR m_szPath[MAX_PATH];
+    HMENU hMenu;
+    BYTE uAlpha;
+    UINT_PTR uTimer;
+    CWICImage wImage;
+    TCHAR szPath[MAX_PATH];
+    static ID2D1Factory *pD2DFactory;
+    CWidgetFrm *pNext;
 
 private:
     CWidgetFrm&operator=(const CWidgetFrm&);
     CWidgetFrm(const CWidgetFrm&);
 
 public:
-    CWidgetFrm(LPCTSTR szPath);
+    CWidgetFrm(CWidgetFrm *pPrev, LPCTSTR szPath = nullptr);
+    virtual ~CWidgetFrm();
 };
 
 #endif // _WIDGET_FRM_H_
